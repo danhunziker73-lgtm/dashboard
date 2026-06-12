@@ -1,15 +1,8 @@
-const HA_URL =
-"https://DEIN-HOMEASSISTANT.DOMAIN";
-
-
-
-const TOKEN =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI0MjMwY2I1NmM2MTE0MTViOTc1NjQ0MDkxYTE3MDA0ZCIsImlhdCI6MTc4MTI1MzIyMSwiZXhwIjoyMDk2NjEzMjIxfQ.nYi4C_5Fg_gasREJIou_Fmr1IccfwboWsf7f863V1XA";
-
-
-
-async function getStates(){
-
+const API = "homeassistant-api.dan-hunziker73.workers.dev";
+async function getStates() {
+  const res = await fetch(API + "/states");
+  return await res.json();
+}
 
 const response =
 await fetch(
