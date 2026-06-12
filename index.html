@@ -1,69 +1,326 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Home Dashboard</title>
-
-<link rel="stylesheet" href="style.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHome Zentrale</title>
+  
+  <!-- Premium Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-
-
 <body>
 
+  <!-- Background decorative elements for glassmorphism -->
+  <div class="glass-bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
 
-<header>
-<h1>🏠 Zentrale</h1>
-<p>Home Assistant Dashboard</p>
-</header>
+  <div class="dashboard-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <i data-lucide="home"></i>
+        </div>
+        <div>
+          <h1>Zentrale</h1>
+          <p class="subtitle">Smart Home & Server Dashboard</p>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <!-- User Presence Indicator -->
+        <div id="user-presence" class="presence-pill state-unknown">
+          <i data-lucide="user"></i>
+          <span class="presence-text">Dan: Laden...</span>
+        </div>
+        <div id="connection-status" class="status-pill state-connecting">
+          <span class="status-dot"></span>
+          <span class="status-text">Verbinde...</span>
+        </div>
+        <button id="btn-settings" class="icon-button" title="Einstellungen">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
+    </header>
 
+    <!-- Alert / Configuration Required Banner -->
+    <div id="setup-banner" class="banner hidden">
+      <div class="banner-content">
+        <i data-lucide="shield-alert"></i>
+        <div>
+          <h4>Konfiguration erforderlich</h4>
+          <p>Bitte richte die Worker-URL und den API-Schlüssel in den Einstellungen ein.</p>
+        </div>
+      </div>
+      <button id="btn-setup-now" class="btn btn-primary btn-sm">Jetzt einrichten</button>
+    </div>
 
+    <!-- Main Content Grid -->
+    <main class="dashboard-grid">
+      
+      <!-- BELEUCHTUNG & GERÄTE CARD -->
+      <section class="dashboard-card card-ha" id="card-lights">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-home"><i data-lucide="lightbulb"></i></div>
+            <h2>Beleuchtung & Geräte</h2>
+          </div>
+          <span class="badge">HA</span>
+        </div>
+        <div class="card-body">
+          <div class="quick-stats-row">
+            <div class="quick-stat">
+              <span class="stat-label">Lichter an</span>
+              <span class="stat-value" id="lights-on-count">0</span>
+            </div>
+            <div class="quick-stat">
+              <span class="stat-label">Geräte aktiv</span>
+              <span class="stat-value" id="switches-on-count">0</span>
+            </div>
+          </div>
+          
+          <div class="control-list" id="home-lights-controls">
+            <div class="loading-spinner-container">
+              <div class="spinner"></div>
+              <span>Lade Beleuchtung...</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-<main>
+      <!-- STOREN / ROLLADEN CARD -->
+      <section class="dashboard-card card-storen" id="card-storen">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-storen"><i data-lucide="blinds"></i></div>
+            <h2>Storen-Steuerung</h2>
+          </div>
+          <span class="badge">HA</span>
+        </div>
+        <div class="card-body">
+          <div class="quick-stats-row">
+            <div class="quick-stat">
+              <span class="stat-label">Geöffnet</span>
+              <span class="stat-value" id="covers-open-count">0</span>
+            </div>
+            <div class="quick-stat">
+              <span class="stat-label">Geschlossen</span>
+              <span class="stat-value" id="covers-closed-count">0</span>
+            </div>
+          </div>
+          
+          <div class="control-list" id="home-storen-controls">
+            <div class="loading-spinner-container">
+              <div class="spinner"></div>
+              <span>Lade Storen...</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <!-- PROXMOX CARD -->
+      <section class="dashboard-card card-pve" id="card-proxmox">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-server"><i data-lucide="server"></i></div>
+            <h2>Proxmox Host</h2>
+          </div>
+          <span class="badge" id="pve-badge">PVE</span>
+        </div>
+        <div class="card-body">
+          <div class="server-metrics">
+            <div class="metric-gauge">
+              <div class="gauge-header">
+                <span class="gauge-label"><i data-lucide="cpu"></i> CPU Auslastung</span>
+                <span class="gauge-value" id="pve-cpu-val">-- %</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="pve-cpu-bar" style="width: 0%"></div>
+              </div>
+            </div>
+            
+            <div class="metric-gauge">
+              <div class="gauge-header">
+                <span class="gauge-label"><i data-lucide="database"></i> RAM Auslastung</span>
+                <span class="gauge-value" id="pve-mem-val">-- %</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="pve-mem-bar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
 
-<section class="card">
+          <div class="control-list" id="proxmox-info">
+            <div class="item">
+              <div class="item-info">
+                <span class="item-title">Systemtemperatur</span>
+                <span class="item-desc">Core Composite</span>
+              </div>
+              <span class="status-text font-mono" id="pve-temp">-- °C</span>
+            </div>
+            <div class="item">
+              <div class="item-info">
+                <span class="item-title">Node Status</span>
+                <span class="item-desc">Verbindungsstatus</span>
+              </div>
+              <span class="status-text text-offline" id="pve-node-status">Unbekannt</span>
+            </div>
+            <div class="item">
+              <div class="item-info">
+                <span class="item-title">Uptime</span>
+                <span class="item-desc">Host-Betriebszeit</span>
+              </div>
+              <span class="status-text font-mono" id="pve-uptime">--</span>
+            </div>
+            <div class="item">
+              <div class="item-info">
+                <span class="item-title">Letztes Backup</span>
+                <span class="item-desc" id="pve-backup-duration">Dauer: --</span>
+              </div>
+              <span class="status-text font-mono" id="pve-backup-time">--</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-<h2>🏠 Haus</h2>
+      <!-- SYNOLOGY NAS CARD -->
+      <section class="dashboard-card card-nas" id="card-nas">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-nas"><i data-lucide="hard-drive"></i></div>
+            <h2>Synology NAS</h2>
+          </div>
+          <span class="badge">NAS</span>
+        </div>
+        <div class="card-body">
+          <div class="server-metrics">
+            <div class="metric-gauge">
+              <div class="gauge-header">
+                <span class="gauge-label"><i data-lucide="cpu"></i> CPU Auslastung</span>
+                <span class="gauge-value" id="nas-cpu-val">-- %</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="nas-cpu-bar" style="width: 0%"></div>
+              </div>
+            </div>
+            
+            <div class="metric-gauge">
+              <div class="gauge-header">
+                <span class="gauge-label"><i data-lucide="folder"></i> Volume 1 (System)</span>
+                <span class="gauge-value" id="nas-vol1-val">-- %</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="nas-vol1-bar" style="width: 0%"></div>
+              </div>
+            </div>
 
-<div id="house">
-Lade Daten...
-</div>
+            <div class="metric-gauge">
+              <div class="gauge-header">
+                <span class="gauge-label"><i data-lucide="folder-git-2"></i> Volume 2 (Backup)</span>
+                <span class="gauge-value" id="nas-vol2-val">-- %</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="nas-vol2-bar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
 
-</section>
+          <div class="control-list" id="nas-info">
+            <div class="item">
+              <div class="item-info">
+                <span class="item-title">Systemtemperatur</span>
+                <span class="item-desc">Gehäusesensor</span>
+              </div>
+              <span class="status-text font-mono" id="nas-temp">-- °C</span>
+            </div>
+            <div class="item">
+              <div class="item-info">
+                <span class="item-title">Festplattentemperatur</span>
+                <span class="item-desc">Durchschnitt (4 Drives)</span>
+              </div>
+              <span class="status-text font-mono" id="nas-hdd-temp">-- °C</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <!-- LXC CONTAINERS CARD -->
+      <section class="dashboard-card card-containers" id="card-lxc">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-containers"><i data-lucide="boxes"></i></div>
+            <h2>LXC Container</h2>
+          </div>
+          <span class="badge" id="lxc-count-badge">0</span>
+        </div>
+        <div class="card-body">
+          <div class="container-grid" id="lxc-containers-list">
+            <!-- Dynamic Proxmox containers will be injected here -->
+            <div class="loading-spinner-container">
+              <div class="spinner"></div>
+              <span>Lade Container-Liste...</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
+    </main>
+  </div>
 
-<section class="card">
+  <!-- CONFIGURATION MODAL (SETTINGS DRAWER) -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i data-lucide="sliders-horizontal"></i> Einstellungen</h3>
+        <button id="btn-close-settings" class="icon-button close-button">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <form id="settings-form">
+        <div class="form-group">
+          <label for="input-api-url">Worker API URL</label>
+          <input type="url" id="input-api-url" placeholder="https://your-worker.workers.dev" required>
+          <small>Die URL deines bereitgestellten Cloudflare Workers.</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="input-api-key">Worker API Schlüssel (Token)</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="input-api-key" placeholder="ha_token_..." required>
+            <button type="button" id="btn-toggle-key-visibility" class="btn-toggle-visibility">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+          <small>Der Autorisierungsschlüssel für den Worker (Bearer Token).</small>
+        </div>
 
-<h2>🖥 Proxmox</h2>
+        <div class="modal-actions">
+          <button type="button" id="btn-test-connection" class="btn btn-secondary">
+            <i data-lucide="refresh-cw"></i> Verbindung testen
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Speichern & Schließen
+          </button>
+        </div>
+        
+        <div id="test-result" class="test-result-msg hidden"></div>
+      </form>
+    </div>
+  </div>
 
-<div id="server">
-Lade Daten...
-</div>
-
-</section>
-
-
-
-<section class="card">
-
-<h2>📦 Container</h2>
-
-<div id="containers">
-Lade Daten...
-</div>
-
-</section>
-
-
-</main>
-
-
-<script src="app.js"></script>
-
+  <!-- Script (ES Module) -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
