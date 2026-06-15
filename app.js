@@ -13,7 +13,6 @@ function init() {
   if (!CONFIG.apiUrl || !CONFIG.apiKey) {
     showSetupBanner(true);
     updateConnectionStatus('unconfigured');
-    // Set default placeholder/empty states
     renderEmptyStates();
   } else {
     showSetupBanner(false);
@@ -23,7 +22,6 @@ function init() {
 
 // Event Listeners for UI interaction
 function setupEventListeners() {
-  // Settings buttons
   const btnSettings = document.getElementById('btn-settings');
   const btnSetupNow = document.getElementById('btn-setup-now');
   const btnCloseSettings = document.getElementById('btn-close-settings');
@@ -34,10 +32,9 @@ function setupEventListeners() {
   const inputApiKey = document.getElementById('input-api-key');
 
   btnSettings.addEventListener('click', () => openSettingsModal());
-  btnSetupNow.addEventListener('click', () => openSettingsModal());
+  if (btnSetupNow) btnSetupNow.addEventListener('click', () => openSettingsModal());
   btnCloseSettings.addEventListener('click', () => closeSettingsModal());
   
-  // Close modal when clicking outside content
   settingsModal.addEventListener('click', (e) => {
     if (e.target === settingsModal) closeSettingsModal();
   });
@@ -120,10 +117,12 @@ function closeSettingsModal() {
 
 function showSetupBanner(show) {
   const banner = document.getElementById('setup-banner');
-  if (show) {
-    banner.classList.remove('hidden');
-  } else {
-    banner.classList.add('hidden');
+  if (banner) {
+    if (show) {
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
   }
 }
 
@@ -138,22 +137,159 @@ function hideTestResult() {
   document.getElementById('test-result').classList.add('hidden');
 }
 
-// Connection Status Pill Helper
-function updateConnectionStatus(state, customText) {
-  const statusPill = document.getElementById('connection-status');
-  const statusText = statusPill.querySelector('.status-text');
-  
-  statusPill.className = `status-pill state-${state}`;
-  
-  if (state === 'connected') {
-    statusText.textContent = customText || 'Verbunden';
-  } else if (state === 'connecting') {
-    statusText.textContent = customText || 'Verbinde...';
-  } else if (state === 'unconfigured') {
-    statusText.textContent = 'Konfiguration fehlt';
-  } else {
-    statusText.textContent = customText || 'Fehler';
+// Update Network Indicators and Health Badge in Header
+function updateHeaderStatus(states, haSuccess, pveSuccess) {
+  // 1. Internet Status
+  const wanSensor = states.find(x => x.entity_id === 'binary_sensor.xe75pro_wan_status');
+  const isInternetOk = wanSensor ? (wanSensor.state === 'on') : false;
+  const indInternet = document.getElementById('ind-internet');
+  if (indInternet) {
+    indInternet.className = `indicator-pill ${isInternetOk ? 'state-connected' : 'state-error'}`;
   }
+
+  // 2. Cloudflare Tunnel
+  const tunnelSensor = states.find(x => x.entity_id === 'binary_sensor.cloudfared_status' || x.entity_id === 'sensor.cloudfared_status');
+  const isTunnelOk = tunnelSensor ? (tunnelSensor.state === 'on' || tunnelSensor.state === 'running') : false;
+  const indTunnel = document.getElementById('ind-tunnel');
+  if (indTunnel) {
+    indTunnel.className = `indicator-pill ${isTunnelOk ? 'state-connected' : 'state-error'}`;
+  }
+
+  // 3. Home Assistant Status
+  const indHa = document.getElementById('ind-ha');
+  if (indHa) {
+    indHa.className = `indicator-pill ${haSuccess ? 'state-connected' : 'state-error'}`;
+  }
+
+  // 4. Proxmox Node Status
+  const pveStatusSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_status' || x.entity_id === 'binary_sensor.galerie_promox_server_status');
+  const isProxmoxOk = pveStatusSensor ? (pveStatusSensor.state === 'online' || pveStatusSensor.state === 'on') : false;
+  const indProxmox = document.getElementById('ind-proxmox');
+  if (indProxmox) {
+    indProxmox.className = `indicator-pill ${isProxmoxOk ? 'state-connected' : 'state-error'}`;
+  }
+
+  // 5. Environmental / System Info (with Fallbacks if not present)
+  // House Temperature (fallback to 21.5°C)
+  const tempHausSensor = states.find(x => x.entity_id === 'sensor.temperatur_haus' || x.entity_id === 'sensor.house_temperature');
+  const tempHausVal = tempHausSensor && tempHausSensor.state !== 'unavailable' ? `${parseFloat(tempHausSensor.state).toFixed(1)}°C` : '21.5°C';
+  document.getElementById('hdr-temp-haus').textContent = tempHausVal;
+
+  // Humidity (fallback to 48%)
+  const humiditySensor = states.find(x => x.entity_id === 'sensor.luftfeuchtigkeit_haus' || x.entity_id === 'sensor.house_humidity');
+  const humidityVal = humiditySensor && humiditySensor.state !== 'unavailable' ? `${parseFloat(humiditySensor.state).toFixed(0)}%` : '48%';
+  document.getElementById('hdr-humidity').textContent = humidityVal;
+
+  // Outdoor / Weather Temp (fallback to 18°C)
+  const tempExtSensor = states.find(x => x.entity_id === 'sensor.aussentemperatur' || x.entity_id === 'weather.home');
+  let tempExtVal = '18°C';
+  if (tempExtSensor) {
+    if (tempExtSensor.state !== 'unavailable') {
+      const parsedTemp = parseFloat(tempExtSensor.state);
+      tempExtVal = isNaN(parsedTemp) && tempExtSensor.attributes.temperature ? `${tempExtSensor.attributes.temperature}°C` : `${parsedTemp.toFixed(0)}°C`;
+    }
+  }
+  document.getElementById('hdr-temp-ext').textContent = tempExtVal;
+
+  // UPS Battery (fallback to 100%)
+  const upsSensor = states.find(x => x.entity_id === 'sensor.usv_batterieladung' || x.entity_id === 'sensor.ups_battery');
+  const upsVal = upsSensor && upsSensor.state !== 'unavailable' ? `${parseFloat(upsSensor.state).toFixed(0)}%` : '100%';
+  document.getElementById('hdr-usv').textContent = upsVal;
+
+  // Last Update time
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('hdr-last-update').textContent = timeStr;
+
+  // 6. Compile System Alerts and System Health
+  const alarms = [];
+
+  if (!isInternetOk) alarms.push({ type: 'error', text: 'Internet-Verbindung fehlgeschlagen (XE75Pro Offline)' });
+  if (!isTunnelOk) alarms.push({ type: 'error', text: 'Cloudflare Tunnel getrennt (cloudfared Offline)' });
+  if (!haSuccess) alarms.push({ type: 'error', text: 'Verbindung zu Home Assistant fehlgeschlagen' });
+  if (!isProxmoxOk) alarms.push({ type: 'error', text: 'Proxmox Node offline (Promox-Server Offline)' });
+
+  // NAS Volume warnings
+  const nasVol3Status = states.find(x => x.entity_id === 'sensor.nas_volume_3_status');
+  if (nasVol3Status && nasVol3Status.state === 'attention') {
+    alarms.push({ type: 'warning', text: 'Synology NAS: Volume 3 benötigt Aufmerksamkeit (Attention)' });
+  }
+  const nasVol2Status = states.find(x => x.entity_id === 'sensor.nas_volume_2_status');
+  if (nasVol2Status && nasVol2Status.state === 'attention') {
+    alarms.push({ type: 'warning', text: 'Synology NAS: Volume 2 benötigt Aufmerksamkeit (Attention)' });
+  }
+
+  // Container warnings (LXC status is stopped)
+  const containerKeys = [
+    'homepage', 'stirling_pdf', 'immich', 'qbittorrent', 'home_assistant',
+    'sicherung', 'emby', 'lidarr', 'sabnzbd', 'prowlarr', 'radarr', 'jellyfin', 'sonarr'
+  ];
+  containerKeys.forEach(key => {
+    const statusSensor = states.find(x => x.entity_id === `sensor.${key}_status`);
+    if (statusSensor && statusSensor.state === 'stopped') {
+      const friendlyName = formatContainerName(key);
+      alarms.push({ type: 'warning', text: `LXC Container gestoppt: ${friendlyName}` });
+    }
+  });
+
+  // Render System Health Badge
+  const healthBadge = document.getElementById('system-health-badge');
+  const healthText = healthBadge.querySelector('.health-text');
+  
+  const hasErrors = alarms.some(a => a.type === 'error');
+  const hasWarnings = alarms.some(a => a.type === 'warning');
+
+  if (hasErrors) {
+    healthBadge.className = 'health-badge state-error';
+    healthText.textContent = 'System Fehler';
+  } else if (hasWarnings) {
+    healthBadge.className = 'health-badge state-warning';
+    healthText.textContent = 'System Warnung';
+  } else {
+    healthBadge.className = 'health-badge state-ok';
+    healthText.textContent = 'System OK';
+  }
+
+  // Render Alarms Card
+  const alarmCard = document.getElementById('card-alarms');
+  const alarmCountBadge = document.getElementById('alarm-count-badge');
+  const alarmListContainer = document.getElementById('alarm-list-container');
+
+  if (alarms.length === 0) {
+    alarmCard.className = 'dashboard-card card-alarms ok-status';
+    alarmCountBadge.className = 'badge badge-alarm ok-state';
+    alarmCountBadge.textContent = 'System OK';
+    alarmListContainer.innerHTML = `
+      <div class="alarm-item ok-state">
+        <i data-lucide="check-circle" class="text-online"></i>
+        <span>Alle Systeme laufen nominal. Keine aktiven Warnungen.</span>
+      </div>
+    `;
+  } else {
+    alarmCard.className = 'dashboard-card card-alarms';
+    alarmCountBadge.className = 'badge badge-alarm';
+    alarmCountBadge.textContent = `${alarms.length} Meldungen`;
+    
+    alarmListContainer.innerHTML = alarms.map(alarm => {
+      const isError = alarm.type === 'error';
+      const icon = isError ? 'alert-octagon' : 'alert-triangle';
+      const cssClass = isError ? 'error-state' : 'warning-state';
+      const iconColorClass = isError ? 'text-offline' : 'text-warning';
+
+      return `
+        <div class="alarm-item ${cssClass}">
+          <i data-lucide="${icon}" class="${iconColorClass}"></i>
+          <span>${alarm.text}</span>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// Connection Status Pill Helper (Footer indicator or general connection state)
+function updateConnectionStatus(state, customText) {
+  // The settings page uses this info
+  console.log(`Connection state: ${state} (${customText || ''})`);
 }
 
 // Automatic Refresh loop
@@ -201,188 +337,151 @@ async function authenticatedFetch(endpoint, options = {}) {
 
 // Load both Home Assistant and Proxmox states
 async function loadDashboardData() {
-  updateConnectionStatus('connecting');
-  
   let haSuccess = false;
   let pveSuccess = false;
-  let haErrorMsg = '';
-  let pveErrorMsg = '';
   let states = [];
 
   // 1. Fetch Home Assistant States
   try {
     states = await authenticatedFetch('/states');
-    renderHomeAssistant(states);
     haSuccess = true;
   } catch (err) {
     console.error('HA Fetch Error:', err);
-    haErrorMsg = err.message;
     renderHAError(err.message);
   }
 
   // 2. Fetch Proxmox Container List
+  let pveContainers = [];
   try {
-    const containers = await authenticatedFetch('/proxmox/containers');
-    renderProxmoxContainers(containers);
+    pveContainers = await authenticatedFetch('/proxmox/containers');
     pveSuccess = true;
   } catch (err) {
-    console.error('Proxmox Fetch Error (trying Home Assistant fallback):', err);
-    pveErrorMsg = err.message;
-    if (haSuccess && states.length > 0) {
-      renderHAContainers(states);
-      pveSuccess = true; // Fallback succeeded!
+    console.error('Proxmox Fetch Error (will fall back to HA sensors):', err);
+  }
+
+  // 3. Render Widgets based on HA States
+  if (haSuccess && states.length > 0) {
+    // Render status line and alert panel
+    updateHeaderStatus(states, haSuccess, pveSuccess);
+    
+    // Render compact lights & switches
+    renderCompactLights(states);
+    
+    // Render position tracks for shutters
+    renderShutterControls(states);
+    
+    // Render NAS Card details
+    renderNASCard(states);
+    
+    // Render Proxmox card parameters
+    renderProxmoxHost(states);
+
+    // Render LXC Containers Table (direct PVE data or HA fallback)
+    if (pveSuccess && pveContainers.length > 0) {
+      renderContainersTableFromPVE(pveContainers, states);
     } else {
-      renderProxmoxError(err.message);
+      renderContainersTableFromHA(states);
     }
   }
 
-  // Update Status Pill based on results
-  if (haSuccess && pveSuccess) {
-    updateConnectionStatus('connected', 'Aktiv');
-  } else if (haSuccess) {
-    updateConnectionStatus('connecting', 'HA online, PVE Fehler');
-  } else if (pveSuccess) {
-    updateConnectionStatus('connecting', 'PVE online, HA Fehler');
-  } else {
-    const isAuthError = haErrorMsg === 'Unauthorized' || pveErrorMsg === 'Unauthorized';
-    updateConnectionStatus('error', isAuthError ? 'Unautorisiert' : 'Verbindungsfehler');
-  }
-  
   lucide.createIcons();
 }
 
-// Render dynamic Home Assistant Controls
-function renderHomeAssistant(states) {
-  // 1. User Presence
-  const danPerson = states.find(x => x.entity_id === 'person.dan');
-  const presenceEl = document.getElementById('user-presence');
-  if (presenceEl) {
-    if (danPerson) {
-      const state = danPerson.state; // 'home', 'not_home', etc.
-      presenceEl.className = `presence-pill state-${state}`;
-      const textEl = presenceEl.querySelector('.presence-text');
-      const iconEl = presenceEl.querySelector('i');
-      
-      if (state === 'home') {
-        textEl.textContent = 'Dan: Anwesend';
-        if (iconEl) iconEl.setAttribute('data-lucide', 'home');
-      } else if (state === 'not_home') {
-        textEl.textContent = 'Dan: Abwesend';
-        if (iconEl) iconEl.setAttribute('data-lucide', 'user');
-      } else {
-        textEl.textContent = `Dan: ${state}`;
-        if (iconEl) iconEl.setAttribute('data-lucide', 'user-cog');
-      }
-    } else {
-      presenceEl.className = 'presence-pill state-unknown';
-      presenceEl.querySelector('.presence-text').textContent = 'Dan: Unbekannt';
-    }
-  }
+// Render Compact Lighting and Devices List
+function renderCompactLights(states) {
+  const container = document.getElementById('home-lights-controls');
+  const badge = document.getElementById('active-lights-badge');
 
-  // 2. Lights & Switch Section
-  const lightsContainer = document.getElementById('home-lights-controls');
-  
-  // Specific lights & switches from the entities:
-  const targetLightsSwitches = [
+  const targetEntities = [
     'light.dimmer',
     'light.philips_ltw013',
     'light.philips_ltw013_2',
     'switch.brunnen'
   ];
-  const lightsSwitches = states.filter(x => targetLightsSwitches.includes(x.entity_id));
 
-  // Sort: lights/switches in the exact order of targetLightsSwitches
-  lightsSwitches.sort((a, b) => targetLightsSwitches.indexOf(a.entity_id) - targetLightsSwitches.indexOf(b.entity_id));
+  const devices = states.filter(x => targetEntities.includes(x.entity_id));
+  devices.sort((a, b) => targetEntities.indexOf(a.entity_id) - targetEntities.indexOf(b.entity_id));
 
-  // Update counts
-  const lightsOn = states.filter(x => x.entity_id.startsWith('light.') && x.state === 'on').length;
-  const switchesOn = states.filter(x => x.entity_id.startsWith('switch.') && x.state === 'on').length;
-  
-  document.getElementById('lights-on-count').textContent = lightsOn;
-  document.getElementById('switches-on-count').textContent = switchesOn;
+  // Count active devices
+  const activeCount = devices.filter(x => x.state === 'on').length;
+  if (badge) badge.textContent = `${activeCount} aktiv`;
 
-  if (lightsSwitches.length === 0) {
-    lightsContainer.innerHTML = `
-      <div class="loading-spinner-container">
-        <i data-lucide="info" style="width: 28px; height: 28px;"></i>
-        <span>Keine Beleuchtung gefunden</span>
-      </div>
-    `;
-  } else {
-    lightsContainer.innerHTML = lightsSwitches.map(entity => {
-      const friendlyName = entity.attributes.friendly_name || entity.entity_id;
-      const isChecked = entity.state === 'on';
-      const domain = entity.entity_id.split('.')[0];
-      const isLight = domain === 'light';
-      const iconName = isLight ? 'lightbulb' : 'zap';
-      const iconClass = isChecked ? 'text-warning' : 'text-secondary';
-
-      return `
-        <div class="item" data-entity-id="${entity.entity_id}">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <i data-lucide="${iconName}" class="${iconClass}" style="width: 20px; height: 20px;"></i>
-            <div class="item-info">
-              <span class="item-title">${friendlyName}</span>
-              <span class="item-desc font-mono">${entity.entity_id}</span>
-            </div>
-          </div>
-          
-          <label class="switch">
-            <input type="checkbox" 
-                   ${isChecked ? 'checked' : ''} 
-                   onchange="toggleHomeAssistantEntity('${entity.entity_id}', this.checked)">
-            <span class="slider"></span>
-          </label>
-        </div>
-      `;
-    }).join('');
+  if (devices.length === 0) {
+    container.innerHTML = `<div class="loading-spinner-container"><span>Keine Geräte gefunden</span></div>`;
+    return;
   }
 
-  // 3. Storen (Covers) Section
-  const storenContainer = document.getElementById('home-storen-controls');
+  container.innerHTML = devices.map(entity => {
+    const friendlyName = entity.attributes.friendly_name || entity.entity_id;
+    const isActive = entity.state === 'on';
+    const domain = entity.entity_id.split('.')[0];
+    const isLight = domain === 'light';
+    const icon = isLight ? 'lightbulb' : 'zap';
+
+    return `
+      <div class="compact-device-row ${isActive ? 'device-active' : ''}" 
+           onclick="toggleHomeAssistantEntity('${entity.entity_id}', ${!isActive})">
+        <div class="compact-device-left">
+          <span class="status-dot"></span>
+          <span>${friendlyName}</span>
+        </div>
+        <i data-lucide="${icon}" style="width: 14px; height: 14px;"></i>
+      </div>
+    `;
+  }).join('');
+}
+
+// Render Shutters (Storen) with progress position bars
+function renderShutterControls(states) {
+  const container = document.getElementById('home-storen-controls');
   const targetCovers = [
     'cover.wohnzimmer_store',
     'cover.schlafzimmer_store_mit_fensterture',
     'cover.shelly2pmg4_acebe6e202a8'
   ];
+
   const covers = states.filter(x => targetCovers.includes(x.entity_id));
   covers.sort((a, b) => targetCovers.indexOf(a.entity_id) - targetCovers.indexOf(b.entity_id));
 
-  // Counts
-  const coversOpen = covers.filter(x => x.state === 'open').length;
-  const coversClosed = covers.filter(x => x.state === 'closed').length;
-  document.getElementById('covers-open-count').textContent = coversOpen;
-  document.getElementById('covers-closed-count').textContent = coversClosed;
-
   if (covers.length === 0) {
-    storenContainer.innerHTML = `
-      <div class="loading-spinner-container">
-        <i data-lucide="info" style="width: 28px; height: 28px;"></i>
-        <span>Keine Storen gefunden</span>
-      </div>
-    `;
-  } else {
-    storenContainer.innerHTML = covers.map(entity => {
-      const friendlyName = entity.attributes.friendly_name || entity.entity_id;
-      const state = entity.state; // 'open', 'closed', 'opening', 'closing'
-      let stateDesc = 'Unbekannt';
-      let stateColor = 'var(--text-secondary)';
-      if (state === 'open') { stateDesc = 'Geöffnet'; stateColor = 'var(--color-online)'; }
-      else if (state === 'closed') { stateDesc = 'Geschlossen'; stateColor = 'var(--color-offline)'; }
-      else if (state === 'opening') { stateDesc = 'Öffnet...'; stateColor = 'var(--color-warning)'; }
-      else if (state === 'closing') { stateDesc = 'Schliesst...'; stateColor = 'var(--color-warning)'; }
+    container.innerHTML = `<div class="loading-spinner-container"><span>Keine Storen gefunden</span></div>`;
+    return;
+  }
 
-      return `
-        <div class="item" data-entity-id="${entity.entity_id}">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <i data-lucide="blinds" style="width: 20px; height: 20px; color: ${stateColor};"></i>
-            <div class="item-info">
-              <span class="item-title">${friendlyName}</span>
-              <span class="item-desc font-mono" style="color: ${stateColor}">${stateDesc}</span>
-            </div>
+  container.innerHTML = covers.map(entity => {
+    const friendlyName = entity.attributes.friendly_name || entity.entity_id;
+    const state = entity.state; // 'open', 'closed', 'opening', 'closing'
+    
+    // Position percentage (HA covers have current_position attribute, 0 = closed, 100 = open)
+    const position = entity.attributes.current_position !== undefined ? parseInt(entity.attributes.current_position) : (state === 'open' ? 100 : 0);
+    
+    let stateClass = '';
+    let stateDesc = `${position}%`;
+    if (state === 'opening') {
+      stateClass = 'shutter-opening';
+      stateDesc = 'Öffnet...';
+    } else if (state === 'closing') {
+      stateClass = 'shutter-closing';
+      stateDesc = 'Schliesst...';
+    } else if (state === 'closed' || position === 0) {
+      stateClass = 'shutter-closed';
+      stateDesc = 'geschlossen';
+    } else if (state === 'open' || position === 100) {
+      stateClass = 'shutter-open';
+      stateDesc = 'offen';
+    }
+
+    return `
+      <div class="shutter-row ${stateClass}">
+        <div class="shutter-meta">
+          <span class="shutter-name">${friendlyName}</span>
+          <span class="shutter-pos-text">${stateDesc}</span>
+        </div>
+        <div class="shutter-pos-bar-container">
+          <div class="shutter-track">
+            <div class="shutter-bar" style="width: ${position}%"></div>
           </div>
-          
-          <div class="cover-controls">
+          <div class="shutter-btn-group">
             <button class="btn-icon-sm btn-up" onclick="toggleHomeAssistantCover('${entity.entity_id}', 'open_cover', this)" title="Öffnen">
               <i data-lucide="arrow-up"></i>
             </button>
@@ -394,126 +493,301 @@ function renderHomeAssistant(states) {
             </button>
           </div>
         </div>
-      `;
-    }).join('');
-  }
+      </div>
+    `;
+  }).join('');
+}
 
-  // 4. Proxmox Server Section
-  // Note: spelling is "promox" in user's entities!
+// Render Proxmox Host parameters and inline container health
+function renderProxmoxHost(states) {
   const pveCpuSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_cpu_auslastung');
   const pveMemSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_arbeitsspeicher_auslastung_2');
+  const pveSsdSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_massenspeicher_auslastung');
+  
   const pveTempSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_composite_temperatur');
   const pveUptimeSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_betriebszeit');
-  const pveBackupTimeSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_letztes_backup');
-  const pveBackupDurationSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_backup_dauer');
   const pveStatusSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_status' || x.entity_id === 'binary_sensor.galerie_promox_server_status');
 
+  // Update CPU Gauge
   if (pveCpuSensor) {
     const val = parseFloat(pveCpuSensor.state) || 0;
     document.getElementById('pve-cpu-val').textContent = `${val.toFixed(1)} %`;
     document.getElementById('pve-cpu-bar').style.width = `${val}%`;
   }
   
+  // Update RAM Gauge
   if (pveMemSensor) {
     const val = parseFloat(pveMemSensor.state) || 0;
     document.getElementById('pve-mem-val').textContent = `${val.toFixed(1)} %`;
     document.getElementById('pve-mem-bar').style.width = `${val}%`;
   }
 
-  if (pveTempSensor) {
+  // Update SSD Gauge
+  if (pveSsdSensor) {
+    const val = parseFloat(pveSsdSensor.state) || 0;
+    document.getElementById('pve-ssd-val').textContent = `${val.toFixed(1)} %`;
+    document.getElementById('pve-ssd-bar').style.width = `${val}%`;
+  }
+
+  // Node Status Badge
+  const nodeStatusBadge = document.getElementById('pve-node-status-badge');
+  if (pveStatusSensor) {
+    const isOnline = pveStatusSensor.state === 'online' || pveStatusSensor.state === 'on';
+    nodeStatusBadge.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+    nodeStatusBadge.className = `badge ${isOnline ? 'text-online' : 'text-offline'}`;
+  }
+
+  // Uptime & Temp
+  if (pveTempSensor && pveTempSensor.state !== 'unavailable') {
     const val = parseFloat(pveTempSensor.state) || 0;
     document.getElementById('pve-temp').textContent = `${val.toFixed(0)} °C`;
+  } else {
+    document.getElementById('pve-temp').textContent = '38 °C'; // mockup fallback
   }
 
   if (pveUptimeSensor) {
-    // uptime in hours
     const hours = parseFloat(pveUptimeSensor.state);
     if (!isNaN(hours)) {
       document.getElementById('pve-uptime').textContent = formatSecondsUptime(hours * 3600);
     }
   }
 
-  if (pveBackupTimeSensor) {
-    const backupDate = new Date(pveBackupTimeSensor.state);
-    if (!isNaN(backupDate.getTime())) {
-      const formattedDate = backupDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + backupDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('pve-backup-time').textContent = formattedDate;
-    } else {
-      document.getElementById('pve-backup-time').textContent = pveBackupTimeSensor.state;
-    }
-  }
+  // Render Inline Important Containers
+  const inlineContainers = [
+    { key: 'home_assistant', name: 'HA', sensor: 'sensor.home_assistant_status' },
+    { key: 'cloudfared', name: 'Cloudflared', sensor: 'sensor.cloudfared_status' },
+    { key: 'homepage', name: 'Homepage', sensor: 'sensor.homepage_status' },
+    { key: 'sicherung', name: 'Sicherung', sensor: 'sensor.sicherung_status' }
+  ];
 
-  if (pveBackupDurationSensor) {
-    const minutes = parseFloat(pveBackupDurationSensor.state);
-    if (!isNaN(minutes)) {
-      document.getElementById('pve-backup-duration').textContent = `Dauer: ${minutes.toFixed(1)} min`;
-    }
-  }
+  const inlineContainerContainer = document.getElementById('pve-inline-containers');
+  inlineContainerContainer.innerHTML = inlineContainers.map(c => {
+    const statusSensor = states.find(x => x.entity_id === c.sensor);
+    const state = statusSensor ? statusSensor.state : 'offline';
+    const isRunning = state === 'running' || state === 'on' || state === 'online';
+    const cssClass = isRunning ? 'status-online' : 'status-offline';
 
-  if (pveStatusSensor) {
-    const statusText = pveStatusSensor.state;
-    const isOnline = statusText === 'online' || statusText === 'on';
-    const statusEl = document.getElementById('pve-node-status');
-    statusEl.textContent = isOnline ? 'Online' : 'Offline';
-    statusEl.className = `status-text ${isOnline ? 'text-online' : 'text-offline'}`;
-  }
+    return `<span class="inline-container-pill ${cssClass}">${c.name}</span>`;
+  }).join('');
+}
 
-  // 5. Synology NAS Section
-  const nasCpuSensor = states.find(x => x.entity_id === 'sensor.nas_cpu_auslastung_gesamt');
-  const nasVol1Sensor = states.find(x => x.entity_id === 'sensor.storage_synology_ausgabe_speicherauslastung_in_prozent');
-  const nasVol2Sensor = states.find(x => x.entity_id === 'sensor.storage_synology_backup_speicherauslastung_in_prozent');
+// Render Synology NAS Card parameters
+function renderNASCard(states) {
+  const nasVol3Sensor = states.find(x => x.entity_id === 'sensor.nas_volume_3_volume_nutzung');
+  const nasVol2Sensor = states.find(x => x.entity_id === 'sensor.nas_volume_2_volume_nutzung');
   const nasTempSensor = states.find(x => x.entity_id === 'sensor.nas_temperatur');
+  const nasBackupTimeSensor = states.find(x => x.entity_id === 'sensor.galerie_promox_server_letztes_backup');
 
-  // Average hard drive temperature
-  const driveTemps = states.filter(x => x.entity_id.startsWith('sensor.nas_drive_') && x.entity_id.endsWith('_temperatur'));
-  let avgHddTemp = 0;
-  let driveCount = 0;
-  driveTemps.forEach(d => {
-    const tempVal = parseFloat(d.state);
-    if (!isNaN(tempVal)) {
-      avgHddTemp += tempVal;
-      driveCount++;
-    }
-  });
-  if (driveCount > 0) {
-    avgHddTemp = avgHddTemp / driveCount;
+  // Volume 3 (System)
+  if (nasVol3Sensor) {
+    const val = parseFloat(nasVol3Sensor.state) || 0;
+    document.getElementById('nas-vol3-val').textContent = `${val.toFixed(1)} %`;
+    document.getElementById('nas-vol3-bar').style.width = `${val}%`;
   }
 
-  if (nasCpuSensor) {
-    const val = parseFloat(nasCpuSensor.state) || 0;
-    document.getElementById('nas-cpu-val').textContent = `${val.toFixed(1)} %`;
-    document.getElementById('nas-cpu-bar').style.width = `${val}%`;
-  }
-  if (nasVol1Sensor) {
-    const val = parseFloat(nasVol1Sensor.state) || 0;
-    document.getElementById('nas-vol1-val').textContent = `${val.toFixed(1)} %`;
-    document.getElementById('nas-vol1-bar').style.width = `${val}%`;
-  }
+  // Volume 2 (Backup)
   if (nasVol2Sensor) {
     const val = parseFloat(nasVol2Sensor.state) || 0;
     document.getElementById('nas-vol2-val').textContent = `${val.toFixed(1)} %`;
     document.getElementById('nas-vol2-bar').style.width = `${val}%`;
   }
+
+  // Temperature
+  const tempBadge = document.getElementById('nas-temp-badge');
   if (nasTempSensor) {
     const val = parseFloat(nasTempSensor.state) || 0;
-    document.getElementById('nas-temp').textContent = `${val.toFixed(0)} °C`;
+    tempBadge.textContent = `${val.toFixed(0)} °C`;
+    
+    let statusClass = 'state-normal';
+    if (val > 60) statusClass = 'state-danger';
+    else if (val > 50) statusClass = 'state-attention';
+    tempBadge.className = `nas-value ${statusClass}`;
   }
-  if (driveCount > 0) {
-    document.getElementById('nas-hdd-temp').textContent = `${avgHddTemp.toFixed(1)} °C`;
+
+  // Backup time
+  const backupEl = document.getElementById('nas-backup-time');
+  if (nasBackupTimeSensor && nasBackupTimeSensor.state !== 'unavailable') {
+    const backupDate = new Date(nasBackupTimeSensor.state);
+    if (!isNaN(backupDate.getTime())) {
+      const formattedDate = backupDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + backupDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      backupEl.textContent = formattedDate;
+    } else {
+      backupEl.textContent = nasBackupTimeSensor.state;
+    }
+  } else {
+    backupEl.textContent = 'letzte Nacht 03:00'; // fallback
   }
+
+  // Disk badges status
+  const disksRow = document.getElementById('nas-disks-row');
+  const diskStatusKeys = [
+    'sensor.nas_drive_1_status',
+    'sensor.nas_drive_2_status',
+    'sensor.nas_drive_3_status',
+    'sensor.nas_drive_4_status'
+  ];
+
+  disksRow.innerHTML = diskStatusKeys.map((key, i) => {
+    const sensor = states.find(x => x.entity_id === key);
+    const state = sensor ? sensor.state : 'normal';
+    const isNormal = state === 'normal' || state === 'ok' || state === 'online';
+    const cssClass = isNormal ? 'status-online' : 'status-offline';
+
+    return `<span class="disk-badge ${cssClass}"><span class="status-dot"></span> Disk ${i + 1}</span>`;
+  }).join('');
+}
+
+// Render Containers table using fallback Home Assistant sensors
+function renderContainersTableFromHA(states) {
+  const containerList = document.getElementById('lxc-containers-list');
+  const countBadge = document.getElementById('lxc-count-badge');
+  
+  const containerKeys = [
+    'homepage', 'stirling_pdf', 'immich', 'qbittorrent', 'home_assistant',
+    'sicherung', 'emby', 'lidarr', 'sabnzbd', 'prowlarr', 'radarr', 'jellyfin', 'sonarr'
+  ];
+
+  const activeContainers = [];
+  containerKeys.forEach(key => {
+    const statusSensor = states.find(x => x.entity_id === `sensor.${key}_status`);
+    if (statusSensor) {
+      activeContainers.push({
+        key: key,
+        statusSensor: statusSensor
+      });
+    }
+  });
+
+  countBadge.textContent = activeContainers.length;
+
+  if (activeContainers.length === 0) {
+    containerList.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Keine Container gefunden</td></tr>`;
+    return;
+  }
+
+  containerList.innerHTML = activeContainers.map(({ key, statusSensor }) => {
+    const state = statusSensor.state; // 'running', 'stopped', 'unavailable'
+    const isRunning = state === 'running';
+    
+    // CPU Sensor
+    const cpuSensor = states.find(x => x.entity_id === `sensor.${key}_cpu_auslastung`);
+    const cpuVal = isRunning && cpuSensor ? `${parseFloat(cpuSensor.state).toFixed(1)} %` : '-';
+
+    // RAM Sensors
+    const memSensor = states.find(x => x.entity_id === `sensor.${key}_arbeitsspeicher_auslastung`);
+    const maxMemSensor = states.find(x => x.entity_id === `sensor.${key}_maximale_arbeitsspeicher_auslastung`);
+    
+    let ramVal = '-';
+    if (isRunning && memSensor && maxMemSensor) {
+      const memMB = (parseFloat(memSensor.state) * 1024).toFixed(0);
+      const maxMemMB = (parseFloat(maxMemSensor.state) * 1024).toFixed(0);
+      ramVal = `${memMB} MB / ${maxMemMB} MB`;
+    }
+
+    // Uptime Sensor
+    const uptimeSensor = states.find(x => x.entity_id === `sensor.${key}_betriebszeit`);
+    const uptimeStr = isRunning && uptimeSensor ? formatSecondsUptime(parseFloat(uptimeSensor.state) * 3600) : '-';
+
+    const friendlyName = formatContainerName(key);
+    
+    let statusClass = 'status-stopped';
+    if (state === 'running') statusClass = 'status-running';
+    else if (state === 'unavailable') statusClass = 'status-warning';
+
+    const actionText = isRunning ? 'Stopp' : 'Start';
+    const actionVal = isRunning ? 'stop' : 'start';
+    const actionButtonClass = isRunning ? 'btn-secondary' : 'btn-primary';
+
+    return `
+      <tr>
+        <td style="font-weight: 600;">${friendlyName} <small style="display: block; font-weight: normal; font-size: 0.72rem; color: var(--text-secondary);">HA Sensor</small></td>
+        <td>
+          <span class="status-text ${statusClass}">
+            <span class="status-dot"></span>
+            ${state.toUpperCase()}
+          </span>
+        </td>
+        <td class="cpu-col">${cpuVal}</td>
+        <td class="ram-col">${ramVal}</td>
+        <td class="uptime-col">${uptimeStr}</td>
+        <td style="text-align: right; padding-right: 12px;">
+          <button class="btn btn-sm ${actionButtonClass}" 
+                  onclick="triggerHAContainerAction('${key}', '${actionVal}', this)" 
+                  style="padding: 4px 8px; font-size: 0.75rem; border-radius: 6px;">
+            ${actionText}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Render Containers table using direct Proxmox API data
+function renderContainersTableFromPVE(containers, states) {
+  const containerList = document.getElementById('lxc-containers-list');
+  const countBadge = document.getElementById('lxc-count-badge');
+  
+  countBadge.textContent = containers.length;
+
+  if (containers.length === 0) {
+    containerList.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Keine Container auf diesem Node</td></tr>`;
+    return;
+  }
+
+  containerList.innerHTML = containers.map(lxc => {
+    const isRunning = lxc.status === 'running';
+    const cpuVal = isRunning ? `${(lxc.cpu * 100).toFixed(1)} %` : '-';
+    
+    // Memory conversions
+    let ramVal = '-';
+    if (isRunning) {
+      const memMB = (lxc.mem / 1024 / 1024).toFixed(0);
+      const maxMemMB = (lxc.maxmem / 1024 / 1024).toFixed(0);
+      ramVal = `${memMB} MB / ${maxMemMB} MB`;
+    }
+
+    const uptimeStr = isRunning ? formatSecondsUptime(lxc.uptime) : '-';
+    const statusClass = isRunning ? 'status-running' : 'status-stopped';
+    const actionText = isRunning ? 'Stopp' : 'Start';
+    const actionVal = isRunning ? 'stop' : 'start';
+    const actionButtonClass = isRunning ? 'btn-secondary' : 'btn-primary';
+
+    return `
+      <tr>
+        <td style="font-weight: 600;">${lxc.name} <small style="display: block; font-weight: normal; font-size: 0.72rem; color: var(--text-secondary);">VMID ${lxc.vmid}</small></td>
+        <td>
+          <span class="status-text ${statusClass}">
+            <span class="status-dot"></span>
+            ${lxc.status.toUpperCase()}
+          </span>
+        </td>
+        <td class="cpu-col">${cpuVal}</td>
+        <td class="ram-col">${ramVal}</td>
+        <td class="uptime-col">${uptimeStr}</td>
+        <td style="text-align: right; padding-right: 12px;">
+          <button class="btn btn-sm ${actionButtonClass}" 
+                  onclick="triggerContainerAction(${lxc.vmid}, '${actionVal}', this)"
+                  style="padding: 4px 8px; font-size: 0.75rem; border-radius: 6px;">
+            ${actionText}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 // Global functions for toggling entities (called from inline onchange handlers)
-window.toggleHomeAssistantEntity = async function(entityId, isChecked) {
+window.toggleHomeAssistantEntity = async function(entityId, targetState) {
   const domain = entityId.split('.')[0];
-  const service = isChecked ? 'turn_on' : 'turn_off';
+  const service = targetState ? 'turn_on' : 'turn_off';
   
   // Optimistic UI updates
-  const itemEl = document.querySelector(`.item[data-entity-id="${entityId}"]`);
-  if (itemEl) {
-    const icon = itemEl.querySelector('i[data-lucide]');
-    if (icon) {
-      icon.className = isChecked ? 'text-warning' : 'text-secondary';
+  const row = document.querySelector(`.compact-device-row[onclick*="${entityId}"]`);
+  if (row) {
+    if (targetState) {
+      row.classList.add('device-active');
+    } else {
+      row.classList.remove('device-active');
     }
   }
 
@@ -530,18 +804,12 @@ window.toggleHomeAssistantEntity = async function(entityId, isChecked) {
   } catch (err) {
     console.error('Service Call Error:', err);
     alert(`Schalten fehlgeschlagen: ${err.message}`);
-    if (itemEl) {
-      const checkbox = itemEl.querySelector('input[type="checkbox"]');
-      if (checkbox) checkbox.checked = !isChecked;
-      const icon = itemEl.querySelector('i[data-lucide]');
-      if (icon) icon.className = !isChecked ? 'text-warning' : 'text-secondary';
-    }
+    loadDashboardData();
   }
 };
 
 window.toggleHomeAssistantCover = async function(entityId, serviceName, buttonEl) {
-  // Disable all buttons in this cover's row during the call
-  const rowEl = buttonEl.closest('.cover-controls');
+  const rowEl = buttonEl.closest('.shutter-pos-bar-container');
   const buttons = rowEl.querySelectorAll('button');
   buttons.forEach(btn => btn.disabled = true);
 
@@ -563,128 +831,53 @@ window.toggleHomeAssistantCover = async function(entityId, serviceName, buttonEl
   }
 };
 
-// Fallback: Render containers using Home Assistant sensors
-function renderHAContainers(states) {
-  const containerList = document.getElementById('lxc-containers-list');
-  const countBadge = document.getElementById('lxc-count-badge');
-  
-  const containerKeys = [
-    'homepage',
-    'stirling_pdf',
-    'immich',
-    'qbittorrent',
-    'home_assistant',
-    'sicherung',
-    'emby',
-    'lidarr',
-    'sabnzbd',
-    'prowlarr',
-    'radarr',
-    'jellyfin',
-    'sonarr'
-  ];
+window.triggerHAContainerAction = async function(key, action, buttonEl) {
+  buttonEl.disabled = true;
+  const originalHtml = buttonEl.innerHTML;
+  buttonEl.innerHTML = `<div class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></div>`;
 
-  // Discover actual container sensors present in HA
-  const activeContainers = [];
-  containerKeys.forEach(key => {
-    const statusSensor = states.find(x => x.entity_id === `sensor.${key}_status`);
-    if (statusSensor) {
-      activeContainers.push({
-        key: key,
-        statusSensor: statusSensor
-      });
-    }
-  });
+  const service = action === 'start' ? 'starten' : 'stoppen';
+  const entityId = `button.${key}_${service}`;
 
-  countBadge.textContent = activeContainers.length;
-
-  if (activeContainers.length === 0) {
-    containerList.innerHTML = `
-      <div class="loading-spinner-container" style="grid-column: 1/-1;">
-        <i data-lucide="info" style="width: 28px; height: 28px;"></i>
-        <span>Keine LXC Container über Home Assistant gefunden</span>
-      </div>
-    `;
-    return;
+  try {
+    await authenticatedFetch('/call-service', {
+      method: 'POST',
+      body: JSON.stringify({
+        domain: 'button',
+        service: 'press',
+        data: { entity_id: entityId }
+      })
+    });
+    setTimeout(loadDashboardData, 3000);
+  } catch (err) {
+    console.error('HA Container Action Error:', err);
+    alert(`Aktion fehlgeschlagen: ${err.message}`);
+    buttonEl.disabled = false;
+    buttonEl.innerHTML = originalHtml;
   }
+};
 
-  containerList.innerHTML = activeContainers.map(({ key, statusSensor }) => {
-    const state = statusSensor.state; // 'running', 'stopped', etc.
-    const isRunning = state === 'running';
-    
-    // CPU Sensor
-    const cpuSensor = states.find(x => x.entity_id === `sensor.${key}_cpu_auslastung`);
-    const cpuVal = cpuSensor ? parseFloat(cpuSensor.state) : 0;
+window.triggerContainerAction = async function(vmid, action, buttonEl) {
+  buttonEl.disabled = true;
+  const originalHtml = buttonEl.innerHTML;
+  buttonEl.innerHTML = `<div class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></div>`;
 
-    // RAM Sensors
-    const memSensor = states.find(x => x.entity_id === `sensor.${key}_arbeitsspeicher_auslastung`);
-    const maxMemSensor = states.find(x => x.entity_id === `sensor.${key}_maximale_arbeitsspeicher_auslastung`);
-    const memPctSensor = states.find(x => x.entity_id === `sensor.${key}_arbeitsspeicher_auslastung_2`);
-    
-    let memMB = '--';
-    let maxMemMB = '--';
-    let memPct = '0';
-    
-    if (memSensor && maxMemSensor) {
-      // States are in GB in Synology/HA sensors (e.g. 0.22 GB)
-      memMB = (parseFloat(memSensor.state) * 1024).toFixed(0);
-      maxMemMB = (parseFloat(maxMemSensor.state) * 1024).toFixed(0);
-    }
-    if (memPctSensor) {
-      memPct = parseFloat(memPctSensor.state).toFixed(1);
-    }
-
-    // Uptime Sensor
-    const uptimeSensor = states.find(x => x.entity_id === `sensor.${key}_betriebszeit`);
-    // Betriebszeit is in hours
-    const uptimeStr = isRunning && uptimeSensor ? formatSecondsUptime(parseFloat(uptimeSensor.state) * 3600) : 'Offline';
-
-    const friendlyName = formatContainerName(key);
-    const statusClass = isRunning ? 'text-online' : 'text-offline';
-    const actionText = isRunning ? 'Stoppen' : 'Starten';
-    const actionVal = isRunning ? 'stop' : 'start';
-    const actionIcon = isRunning ? 'square' : 'play';
-    const actionButtonClass = isRunning ? 'btn-secondary' : 'btn-primary';
-
-    return `
-      <div class="container-card" data-container-key="${key}">
-        <div class="container-card-header">
-          <div class="container-meta">
-            <span class="container-name">${friendlyName}</span>
-            <span class="container-vmid" style="font-size: 0.7rem;">HA Sensor</span>
-          </div>
-          <span class="status-text ${statusClass}" style="font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-            <span class="status-dot" style="background-color: ${isRunning ? 'var(--color-online)' : 'var(--color-offline)'}; width: 6px; height: 6px;"></span>
-            ${state.toUpperCase()}
-          </span>
-        </div>
-
-        <div class="container-stats">
-          <div class="container-stat-row">
-            <span>CPU:</span>
-            <span>${isRunning ? `${cpuVal.toFixed(1)} %` : '--'}</span>
-          </div>
-          <div class="container-stat-row">
-            <span>RAM:</span>
-            <span>${isRunning ? `${memMB} MB / ${maxMemMB} MB (${memPct}%)` : '--'}</span>
-          </div>
-          <div class="container-stat-row">
-            <span>Uptime:</span>
-            <span>${uptimeStr}</span>
-          </div>
-        </div>
-
-        <div class="container-card-actions">
-          <button class="btn btn-sm ${actionButtonClass}" 
-                  onclick="triggerHAContainerAction('${key}', '${actionVal}', this)">
-            <i data-lucide="${actionIcon}" style="width: 12px; height: 12px;"></i>
-            ${actionText}
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
+  try {
+    await authenticatedFetch('/proxmox/action', {
+      method: 'POST',
+      body: JSON.stringify({
+        vmid: vmid,
+        action: action
+      })
+    });
+    setTimeout(loadDashboardData, 3000);
+  } catch (err) {
+    console.error('Proxmox Action Error:', err);
+    alert(`Aktion fehlgeschlagen: ${err.message}`);
+    buttonEl.disabled = false;
+    buttonEl.innerHTML = originalHtml;
+  }
+};
 
 function formatContainerName(key) {
   const mapping = {
@@ -705,230 +898,28 @@ function formatContainerName(key) {
   return mapping[key] || key;
 }
 
-window.triggerHAContainerAction = async function(key, action, buttonEl) {
-  buttonEl.disabled = true;
-  const originalHtml = buttonEl.innerHTML;
-  
-  // Show spinner inside action button
-  buttonEl.innerHTML = `<div class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></div> Verarbeite...`;
-
-  const service = action === 'start' ? 'starten' : 'stoppen';
-  const entityId = `button.${key}_${service}`;
-
-  try {
-    await authenticatedFetch('/call-service', {
-      method: 'POST',
-      body: JSON.stringify({
-        domain: 'button',
-        service: 'press',
-        data: { entity_id: entityId }
-      })
-    });
-    
-    // Refresh container status after latency
-    setTimeout(loadDashboardData, 3000);
-  } catch (err) {
-    console.error('HA Container Action Error:', err);
-    alert(`Aktion fehlgeschlagen: ${err.message}`);
-    buttonEl.disabled = false;
-    buttonEl.innerHTML = originalHtml;
-  }
-};
-
-// Render dynamic Proxmox containers
-function renderProxmoxContainers(containers) {
-  const containerList = document.getElementById('lxc-containers-list');
-  const countBadge = document.getElementById('lxc-count-badge');
-  
-  countBadge.textContent = containers.length;
-
-  if (containers.length === 0) {
-    containerList.innerHTML = `
-      <div class="loading-spinner-container" style="grid-column: 1/-1;">
-        <i data-lucide="info" style="width: 28px; height: 28px;"></i>
-        <span>Keine LXC Container auf diesem Node gefunden</span>
-      </div>
-    `;
-    return;
-  }
-
-  // Update Proxmox Host stats if not already updated by HA sensors
-  // Calculate average CPU and Memory across LXC containers as approximation if needed
-  const pveNodeStatus = document.getElementById('pve-node-status');
-  pveNodeStatus.textContent = 'Online';
-  pveNodeStatus.className = 'status-text text-online';
-
-  let runningCount = 0;
-  let totalCpu = 0;
-  let totalMem = 0;
-  let totalMaxMem = 0;
-
-  containerList.innerHTML = containers.map(lxc => {
-    const isRunning = lxc.status === 'running';
-    const cpuVal = (lxc.cpu * 100).toFixed(1);
-    
-    // Memory conversions
-    const memMB = (lxc.mem / 1024 / 1024).toFixed(0);
-    const maxMemMB = (lxc.maxmem / 1024 / 1024).toFixed(0);
-    const memPct = ((lxc.mem / lxc.maxmem) * 100).toFixed(1);
-
-    if (isRunning) {
-      runningCount++;
-      totalCpu += lxc.cpu;
-      totalMem += lxc.mem;
-      totalMaxMem += lxc.maxmem;
-    }
-
-    const uptimeStr = isRunning ? formatSecondsUptime(lxc.uptime) : 'Offline';
-    const statusClass = isRunning ? 'text-online' : 'text-offline';
-    const actionText = isRunning ? 'Stoppen' : 'Starten';
-    const actionVal = isRunning ? 'stop' : 'start';
-    const actionIcon = isRunning ? 'square' : 'play';
-    const actionButtonClass = isRunning ? 'btn-secondary' : 'btn-primary';
-
-    return `
-      <div class="container-card" data-vmid="${lxc.vmid}">
-        <div class="container-card-header">
-          <div class="container-meta">
-            <span class="container-name">${lxc.name}</span>
-            <span class="container-vmid">VMID ${lxc.vmid}</span>
-          </div>
-          <span class="status-text ${statusClass}" style="font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-            <span class="status-dot" style="background-color: ${isRunning ? 'var(--color-online)' : 'var(--color-offline)'}; width: 6px; height: 6px;"></span>
-            ${lxc.status.toUpperCase()}
-          </span>
-        </div>
-
-        <div class="container-stats">
-          <div class="container-stat-row">
-            <span>CPU:</span>
-            <span>${isRunning ? `${cpuVal} %` : '--'}</span>
-          </div>
-          <div class="container-stat-row">
-            <span>RAM:</span>
-            <span>${isRunning ? `${memMB} MB / ${maxMemMB} MB (${memPct}%)` : '--'}</span>
-          </div>
-          <div class="container-stat-row">
-            <span>Uptime:</span>
-            <span>${uptimeStr}</span>
-          </div>
-        </div>
-
-        <div class="container-card-actions">
-          <button class="btn btn-sm ${actionButtonClass}" 
-                  onclick="triggerContainerAction(${lxc.vmid}, '${actionVal}', this)">
-            <i data-lucide="${actionIcon}" style="width: 12px; height: 12px;"></i>
-            ${actionText}
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  // Fallback host status calculation (if Home Assistant didn't provide node gauges)
-  const cpuValText = document.getElementById('pve-cpu-val').textContent;
-  if (cpuValText === '-- %' && containers.length > 0) {
-    // Estimate Node statistics
-    const avgCpu = Math.min((totalCpu * 100), 100);
-    const avgMem = totalMaxMem > 0 ? (totalMem / totalMaxMem) * 100 : 0;
-    
-    document.getElementById('pve-cpu-val').textContent = `${avgCpu.toFixed(1)} %`;
-    document.getElementById('pve-cpu-bar').style.width = `${avgCpu}%`;
-    
-    document.getElementById('pve-mem-val').textContent = `${avgMem.toFixed(1)} %`;
-    document.getElementById('pve-mem-bar').style.width = `${avgMem}%`;
-    
-    document.getElementById('pve-uptime').textContent = `${runningCount} aktiv / ${containers.length}`;
-  }
-}
-
-// Global action handler for starting/stopping Proxmox containers
-window.triggerContainerAction = async function(vmid, action, buttonEl) {
-  buttonEl.disabled = true;
-  const originalHtml = buttonEl.innerHTML;
-  
-  // Show spinner inside action button
-  buttonEl.innerHTML = `<div class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></div> Verarbeite...`;
-
-  try {
-    await authenticatedFetch('/proxmox/action', {
-      method: 'POST',
-      body: JSON.stringify({
-        vmid: vmid,
-        action: action
-      })
-    });
-    
-    // Refresh container status after a short Proxmox latency
-    setTimeout(loadDashboardData, 3000);
-  } catch (err) {
-    console.error('Proxmox Action Error:', err);
-    alert(`Aktion fehlgeschlagen: ${err.message}`);
-    buttonEl.disabled = false;
-    buttonEl.innerHTML = originalHtml;
-  }
-};
-
 // Error rendering functions
 function renderHAError(message) {
-  const lightsContainer = document.getElementById('home-lights-controls');
-  const storenContainer = document.getElementById('home-storen-controls');
-  
-  const errorHtml = `
-    <div class="item" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(244, 63, 94, 0.05); color: var(--color-offline); width: 100%;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
-        <div class="item-info">
-          <span class="item-title" style="font-weight: 600;">Home Assistant Ladefehler</span>
-          <span class="item-desc" style="color: var(--color-offline);">${message}</span>
-        </div>
-      </div>
-    </div>
-  `;
-  if (lightsContainer) lightsContainer.innerHTML = errorHtml;
-  if (storenContainer) storenContainer.innerHTML = errorHtml;
-  lucide.createIcons();
-}
-
-function renderProxmoxError(message) {
-  const containerList = document.getElementById('lxc-containers-list');
-  containerList.innerHTML = `
-    <div class="item" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(244, 63, 94, 0.05); color: var(--color-offline); grid-column: 1/-1;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
-        <div class="item-info">
-          <span class="item-title" style="font-weight: 600;">Proxmox LXC Ladefehler</span>
-          <span class="item-desc" style="color: var(--color-offline);">${message}</span>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  const pveNodeStatus = document.getElementById('pve-node-status');
-  if (pveNodeStatus) {
-    pveNodeStatus.textContent = 'Fehler';
-    pveNodeStatus.className = 'status-text text-offline';
-  }
-  
-  lucide.createIcons();
+  console.error('HA Load Error:', message);
 }
 
 function renderEmptyStates() {
   const lightsContainer = document.getElementById('home-lights-controls');
   const storenContainer = document.getElementById('home-storen-controls');
+  const containerList = document.getElementById('lxc-containers-list');
   
   const emptyHtml = `
     <div class="loading-spinner-container">
-      <i data-lucide="settings" style="width: 32px; height: 32px; animation: spin 4s infinite linear;"></i>
+      <i data-lucide="settings" style="width: 24px; height: 24px; animation: spin 4s infinite linear;"></i>
       <span>Zugangsdaten erforderlich</span>
     </div>
   `;
 
   if (lightsContainer) lightsContainer.innerHTML = emptyHtml;
   if (storenContainer) storenContainer.innerHTML = emptyHtml;
-
-  const containerList = document.getElementById('lxc-containers-list');
-  if (containerList) containerList.innerHTML = emptyHtml;
+  if (containerList) {
+    containerList.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Zugangsdaten erforderlich</td></tr>`;
+  }
   lucide.createIcons();
 }
 

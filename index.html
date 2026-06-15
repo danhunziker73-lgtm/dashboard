@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartHome Zentrale</title>
+  <title>SmartHome Zentrale - Leitstand</title>
   
   <!-- Premium Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,27 +26,47 @@
   </div>
 
   <div class="dashboard-wrapper">
-    <!-- Header -->
+    <!-- NOC Status Header -->
     <header class="app-header">
       <div class="header-left">
         <div class="logo-icon">
-          <i data-lucide="home"></i>
+          <i data-lucide="shield"></i>
         </div>
         <div>
           <h1>Zentrale</h1>
-          <p class="subtitle">Smart Home & Server Dashboard</p>
+          <div class="header-status-line">
+            <span id="system-health-badge" class="health-badge state-connecting">
+              <span class="status-dot"></span> 
+              <span class="health-text">Lade Status...</span>
+            </span>
+            <span class="status-divider">|</span>
+            <span class="status-item" title="Haustemperatur">
+              <i data-lucide="thermometer"></i> <span id="hdr-temp-haus">21.5°C</span>
+            </span>
+            <span class="status-item" title="Luftfeuchtigkeit">
+              <i data-lucide="droplet"></i> <span id="hdr-humidity">48%</span>
+            </span>
+            <span class="status-item" title="Aussentemperatur / Wetter">
+              <i data-lucide="cloud"></i> <span id="hdr-temp-ext">18°C</span>
+            </span>
+            <span class="status-item" title="USV Ladung">
+              <i data-lucide="battery"></i> <span id="hdr-usv">100%</span>
+            </span>
+            <span class="status-divider">|</span>
+            <span class="status-item" title="Letzte Aktualisierung">
+              <i data-lucide="clock"></i> <span id="hdr-last-update">--:--</span>
+            </span>
+          </div>
         </div>
       </div>
       
       <div class="header-right">
-        <!-- User Presence Indicator -->
-        <div id="user-presence" class="presence-pill state-unknown">
-          <i data-lucide="user"></i>
-          <span class="presence-text">Dan: Laden...</span>
-        </div>
-        <div id="connection-status" class="status-pill state-connecting">
-          <span class="status-dot"></span>
-          <span class="status-text">Verbinde...</span>
+        <!-- Live Status Indicators -->
+        <div class="network-indicators">
+          <span id="ind-internet" class="indicator-pill state-connecting" title="Internet-Verbindung"><span class="status-dot"></span> Internet</span>
+          <span id="ind-tunnel" class="indicator-pill state-connecting" title="Cloudflare Tunnel"><span class="status-dot"></span> Tunnel</span>
+          <span id="ind-ha" class="indicator-pill state-connecting" title="Home Assistant Verbindung"><span class="status-dot"></span> HA</span>
+          <span id="ind-proxmox" class="indicator-pill state-connecting" title="Proxmox Node"><span class="status-dot"></span> Proxmox</span>
         </div>
         <button id="btn-settings" class="icon-button" title="Einstellungen">
           <i data-lucide="settings"></i>
@@ -66,6 +86,25 @@
       <button id="btn-setup-now" class="btn btn-primary btn-sm">Jetzt einrichten</button>
     </div>
 
+    <!-- NOC Alerts / Meldungen Panel -->
+    <section class="dashboard-card card-alarms" id="card-alarms">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon icon-alarms"><i data-lucide="alert-triangle"></i></div>
+          <h2>System-Meldungen</h2>
+        </div>
+        <span class="badge badge-alarm" id="alarm-count-badge">System OK</span>
+      </div>
+      <div class="card-body">
+        <div class="alarm-list" id="alarm-list-container">
+          <div class="alarm-item ok-state">
+            <i data-lucide="check-circle" class="text-online"></i>
+            <span>Alle Systeme laufen nominal. Keine aktiven Warnungen.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Main Content Grid -->
     <main class="dashboard-grid">
       
@@ -76,21 +115,10 @@
             <div class="card-icon icon-home"><i data-lucide="lightbulb"></i></div>
             <h2>Beleuchtung & Geräte</h2>
           </div>
-          <span class="badge">HA</span>
+          <span class="badge" id="active-lights-badge">0 aktiv</span>
         </div>
         <div class="card-body">
-          <div class="quick-stats-row">
-            <div class="quick-stat">
-              <span class="stat-label">Lichter an</span>
-              <span class="stat-value" id="lights-on-count">0</span>
-            </div>
-            <div class="quick-stat">
-              <span class="stat-label">Geräte aktiv</span>
-              <span class="stat-value" id="switches-on-count">0</span>
-            </div>
-          </div>
-          
-          <div class="control-list" id="home-lights-controls">
+          <div class="compact-device-list" id="home-lights-controls">
             <div class="loading-spinner-container">
               <div class="spinner"></div>
               <span>Lade Beleuchtung...</span>
@@ -106,24 +134,32 @@
             <div class="card-icon icon-storen"><i data-lucide="blinds"></i></div>
             <h2>Storen-Steuerung</h2>
           </div>
-          <span class="badge">HA</span>
+          <span class="badge" id="active-storen-badge">3 Storen</span>
         </div>
         <div class="card-body">
-          <div class="quick-stats-row">
-            <div class="quick-stat">
-              <span class="stat-label">Geöffnet</span>
-              <span class="stat-value" id="covers-open-count">0</span>
-            </div>
-            <div class="quick-stat">
-              <span class="stat-label">Geschlossen</span>
-              <span class="stat-value" id="covers-closed-count">0</span>
-            </div>
-          </div>
-          
-          <div class="control-list" id="home-storen-controls">
+          <div class="shutter-control-list" id="home-storen-controls">
             <div class="loading-spinner-container">
               <div class="spinner"></div>
               <span>Lade Storen...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ZUTRITT & SICHERHEIT CARD -->
+      <section class="dashboard-card card-access" id="card-access">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-access"><i data-lucide="shield-check"></i></div>
+            <h2>Zutritt & Sicherheit</h2>
+          </div>
+          <span class="badge" id="access-status-badge">Sicher</span>
+        </div>
+        <div class="card-body">
+          <div class="compact-device-list" id="home-access-controls">
+            <div class="loading-spinner-container">
+              <div class="spinner"></div>
+              <span>Lade Zutrittsdaten...</span>
             </div>
           </div>
         </div>
@@ -136,7 +172,7 @@
             <div class="card-icon icon-server"><i data-lucide="server"></i></div>
             <h2>Proxmox Host</h2>
           </div>
-          <span class="badge" id="pve-badge">PVE</span>
+          <span class="badge" id="pve-node-status-badge">ONLINE</span>
         </div>
         <div class="card-body">
           <div class="server-metrics">
@@ -159,36 +195,37 @@
                 <div class="progress-bar" id="pve-mem-bar" style="width: 0%"></div>
               </div>
             </div>
+
+            <div class="metric-gauge">
+              <div class="gauge-header">
+                <span class="gauge-label"><i data-lucide="hard-drive"></i> SSD Auslastung</span>
+                <span class="gauge-value" id="pve-ssd-val">-- %</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="pve-ssd-bar" style="width: 0%"></div>
+              </div>
+            </div>
           </div>
 
-          <div class="control-list" id="proxmox-info">
-            <div class="item">
-              <div class="item-info">
-                <span class="item-title">Systemtemperatur</span>
-                <span class="item-desc">Core Composite</span>
-              </div>
-              <span class="status-text font-mono" id="pve-temp">-- °C</span>
+          <!-- Important containers overview inside the Proxmox card -->
+          <div class="inline-containers-group">
+            <h4 class="section-subtitle">Wichtige Container</h4>
+            <div class="inline-containers-grid" id="pve-inline-containers">
+              <span class="inline-container-pill status-loading">HA</span>
+              <span class="inline-container-pill status-loading">Cloudflared</span>
+              <span class="inline-container-pill status-loading">Homepage</span>
+              <span class="inline-container-pill status-loading">Sicherung</span>
             </div>
-            <div class="item">
-              <div class="item-info">
-                <span class="item-title">Node Status</span>
-                <span class="item-desc">Verbindungsstatus</span>
-              </div>
-              <span class="status-text text-offline" id="pve-node-status">Unbekannt</span>
+          </div>
+
+          <div class="control-list info-compact">
+            <div class="info-row">
+              <span class="info-label"><i data-lucide="thermometer"></i> Temp:</span>
+              <span class="info-value font-mono" id="pve-temp">-- °C</span>
             </div>
-            <div class="item">
-              <div class="item-info">
-                <span class="item-title">Uptime</span>
-                <span class="item-desc">Host-Betriebszeit</span>
-              </div>
-              <span class="status-text font-mono" id="pve-uptime">--</span>
-            </div>
-            <div class="item">
-              <div class="item-info">
-                <span class="item-title">Letztes Backup</span>
-                <span class="item-desc" id="pve-backup-duration">Dauer: --</span>
-              </div>
-              <span class="status-text font-mono" id="pve-backup-time">--</span>
+            <div class="info-row">
+              <span class="info-label"><i data-lucide="clock"></i> Uptime:</span>
+              <span class="info-value font-mono" id="pve-uptime">--</span>
             </div>
           </div>
         </div>
@@ -207,24 +244,14 @@
           <div class="server-metrics">
             <div class="metric-gauge">
               <div class="gauge-header">
-                <span class="gauge-label"><i data-lucide="cpu"></i> CPU Auslastung</span>
-                <span class="gauge-value" id="nas-cpu-val">-- %</span>
+                <span class="gauge-label"><i data-lucide="folder"></i> Volume 3 (System)</span>
+                <span class="gauge-value" id="nas-vol3-val">-- %</span>
               </div>
               <div class="progress-track">
-                <div class="progress-bar" id="nas-cpu-bar" style="width: 0%"></div>
+                <div class="progress-bar" id="nas-vol3-bar" style="width: 0%"></div>
               </div>
             </div>
             
-            <div class="metric-gauge">
-              <div class="gauge-header">
-                <span class="gauge-label"><i data-lucide="folder"></i> Volume 1 (System)</span>
-                <span class="gauge-value" id="nas-vol1-val">-- %</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-bar" id="nas-vol1-bar" style="width: 0%"></div>
-              </div>
-            </div>
-
             <div class="metric-gauge">
               <div class="gauge-header">
                 <span class="gauge-label"><i data-lucide="folder-git-2"></i> Volume 2 (Backup)</span>
@@ -236,42 +263,78 @@
             </div>
           </div>
 
-          <div class="control-list" id="nas-info">
-            <div class="item">
-              <div class="item-info">
-                <span class="item-title">Systemtemperatur</span>
-                <span class="item-desc">Gehäusesensor</span>
-              </div>
-              <span class="status-text font-mono" id="nas-temp">-- °C</span>
+          <div class="nas-details-grid">
+            <div class="nas-detail-item">
+              <span class="nas-label"><i data-lucide="thermometer"></i> Temp</span>
+              <span class="nas-value font-mono" id="nas-temp-badge">-- °C</span>
             </div>
-            <div class="item">
-              <div class="item-info">
-                <span class="item-title">Festplattentemperatur</span>
-                <span class="item-desc">Durchschnitt (4 Drives)</span>
-              </div>
-              <span class="status-text font-mono" id="nas-hdd-temp">-- °C</span>
+            <div class="nas-detail-item">
+              <span class="nas-label"><i data-lucide="shield-check"></i> Backup</span>
+              <span class="nas-value font-mono" id="nas-backup-time">--</span>
+            </div>
+          </div>
+
+          <div class="disk-status-group">
+            <h4 class="section-subtitle">Festplatten Status</h4>
+            <div class="disk-status-row" id="nas-disks-row">
+              <span class="disk-badge status-loading"><span class="status-dot"></span> Disk 1</span>
+              <span class="disk-badge status-loading"><span class="status-dot"></span> Disk 2</span>
+              <span class="disk-badge status-loading"><span class="status-dot"></span> Disk 3</span>
+              <span class="disk-badge status-loading"><span class="status-dot"></span> Disk 4</span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- LXC CONTAINERS CARD -->
+      <!-- NETZWERK-GERÄTE CARD -->
+      <section class="dashboard-card card-network" id="card-network">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-network"><i data-lucide="wifi"></i></div>
+            <h2>Netzwerk-Geräte</h2>
+          </div>
+          <span class="badge" id="network-count-badge">Lade...</span>
+        </div>
+        <div class="card-body">
+          <div class="network-device-list" id="network-devices-list">
+            <div class="loading-spinner-container">
+              <div class="spinner"></div>
+              <span>Lade Geräte-Ping...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LXC CONTAINERS CARD (Table) -->
       <section class="dashboard-card card-containers" id="card-lxc">
         <div class="card-header">
           <div class="card-title-group">
             <div class="card-icon icon-containers"><i data-lucide="boxes"></i></div>
-            <h2>LXC Container</h2>
+            <h2>LXC Container Übersicht</h2>
           </div>
           <span class="badge" id="lxc-count-badge">0</span>
         </div>
-        <div class="card-body">
-          <div class="container-grid" id="lxc-containers-list">
-            <!-- Dynamic Proxmox containers will be injected here -->
-            <div class="loading-spinner-container">
-              <div class="spinner"></div>
-              <span>Lade Container-Liste...</span>
-            </div>
-          </div>
+        <div class="card-body table-responsive">
+          <table class="container-table">
+            <thead>
+              <tr>
+                <th>Container</th>
+                <th>Status</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>Uptime</th>
+                <th style="text-align: right; padding-right: 12px;">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="lxc-containers-list">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px 0;">
+                  <div class="spinner" style="margin: 0 auto 12px auto;"></div>
+                  Lade Container-Liste...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
