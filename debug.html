@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smarthome Debugger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(22, 28, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-color: #6366f1;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --color-online: #10b981;
+      --color-offline: #f43f5e;
+      --color-warning: #f59e0b;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-top: 0;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    input {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: white;
+      font-size: 0.95rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #4f46e5;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    .console-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .console-output {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      height: 350px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #38bdf8;
+    }
+
+    .log-info { color: #38bdf8; }
+    .log-success { color: var(--color-online); }
+    .log-warning { color: var(--color-warning); }
+    .log-error { color: var(--color-offline); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1><i data-lucide="terminal"></i> Cloudflare Worker & Proxmox Debugger</h1>
+    <div class="subtitle">Verbindungstests und detaillierte Fehleranalyse für deine Smarthome Zentrale</div>
+
+    <div class="form-group">
+      <label for="dbg-url">Worker API URL</label>
+      <input type="url" id="dbg-url" placeholder="https://..." required>
+    </div>
+
+    <div class="form-group">
+      <label for="dbg-key">Worker API Token (API_KEY)</label>
+      <input type="password" id="dbg-key" placeholder="ha_token_..." required>
+    </div>
+
+    <div class="button-group">
+      <button class="btn-primary" id="btn-test-ha">
+        <i data-lucide="home"></i> Test Home Assistant (/states)
+      </button>
+      <button class="btn-secondary" id="btn-test-pve">
+        <i data-lucide="server"></i> Test Proxmox (/proxmox/containers)
+      </button>
+      <button class="btn-secondary" id="btn-clear">
+        <i data-lucide="trash-2"></i> Console leeren
+      </button>
+    </div>
+
+    <div class="console-header">
+      <span class="console-title">Ausgabe / Log</span>
+      <small style="color: var(--text-secondary)">Prüfe auch die Browser-Konsole (F12) für Netzwerkdetails!</small>
+    </div>
+    <div class="console-output" id="console">Lade Konfiguration...</div>
+  </div>
+
+  <script>
+    // Load config from localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedUrl = localStorage.getItem('ha_worker_url') || '';
+      const savedKey = localStorage.getItem('ha_worker_key') || '';
+
+      document.getElementById('dbg-url').value = savedUrl;
+      document.getElementById('dbg-key').value = savedKey;
+
+      log('System bereit. Konfiguration aus localStorage geladen.', 'success');
+      log(`Gespeicherte URL: ${savedUrl || 'keine'}`, 'info');
+      log(`Gespeichertes Token: ${savedKey ? savedKey.substring(0, 15) + '...' : 'keins'}`, 'info');
+
+      lucide.createIcons();
+    });
+
+    const consoleDiv = document.getElementById('console');
+
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const cssClass = `log-${type}`;
+      const logLine = `<span class="${cssClass}">[${timestamp}] [${type.toUpperCase()}] ${message}</span>\n`;
+      consoleDiv.innerHTML += logLine;
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+      // Duplicate to actual browser console for developer convenience
+      if (type === 'error') {
+        console.error(`[DEBUGGER] ${message}`);
+      } else if (type === 'warning') {
+        console.warn(`[DEBUGGER] ${message}`);
+      } else {
+        console.log(`[DEBUGGER] ${message}`);
+      }
+    }
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      consoleDiv.innerHTML = '';
+      log('Konsole geleert.', 'info');
+    });
+
+    async function runTest(endpoint) {
+      const url = document.getElementById('dbg-url').value.trim().replace(/\/$/, '');
+      const key = document.getElementById('dbg-key').value.trim();
+
+      if (!url || !key) {
+        log('Fehler: API-URL und Token dürfen nicht leer sein.', 'error');
+        return;
+      }
+
+      const fullUrl = `${url}${endpoint}`;
+      log(`----------------------------------------`, 'info');
+      log(`Starte Test für Endpunkt: ${endpoint}`, 'info');
+      log(`Ziel-URL: ${fullUrl}`, 'info');
+      log(`Sende Authorization-Header: Bearer ${key.substring(0, 10)}... [anonymisiert]`, 'info');
+
+      try {
+        const start = performance.now();
+        const response = await fetch(fullUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json'
+          }
+        });
+        const duration = (performance.now() - start).toFixed(0);
+
+        log(`Antwort erhalten nach ${duration}ms`, 'info');
+        log(`HTTP Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+        // Read response body
+        const responseText = await response.text();
+        log(`Antwort-Typ: Raw Text`, 'info');
+        log(`Antwort-Länge: ${responseText.length} Bytes`, 'info');
+        
+        if (response.ok) {
+          log(`Inhalt erhalten:`, 'success');
+          try {
+            const parsed = JSON.parse(responseText);
+            log(JSON.stringify(parsed, null, 2), 'success');
+          } catch (e) {
+            log(responseText, 'success');
+          }
+        } else {
+          log(`Fehlermeldung vom Server:`, 'error');
+          log(responseText, 'error');
+
+          if (response.status === 403) {
+            log(`TIPP: Status 403 (Forbidden) bedeutet, dass die Anmeldedaten fehlerhaft sind oder abgelehnt wurden.`, 'warning');
+            if (endpoint.includes('proxmox')) {
+              log(`Prüfe Proxmox-API-Token-Rechte, Ablaufdatum und korrekte Aufteilung der Variablen (PVE_USER, PVE_TOKEN, PVE_SECRET) im Cloudflare-Dashboard.`, 'warning');
+            }
+          } else if (response.status === 401) {
+            log(`TIPP: Status 401 (Unauthorized) bedeutet, dass das Worker Bearer-Token (API_KEY) ungültig ist.`, 'warning');
+          }
+        }
+      } catch (err) {
+        log(`NETZWERK-FEHLER (Verbindung zum Worker fehlgeschlagen):`, 'error');
+        log(err.message, 'error');
+        log(`TIPP: Mögliche Ursachen:
+- Falsche API-URL eingegeben (z.B. Protokoll http statt https).
+- Keine aktive Internetverbindung.
+- CORS-Probleme (prüfe in der Browser-Konsole mit F12 -> Console ob ein 'Access-Control-Allow-Origin' Fehler auftritt).`, 'warning');
+      }
+    }
+
+    document.getElementById('btn-test-ha').addEventListener('click', () => runTest('/states'));
+    document.getElementById('btn-test-pve').addEventListener('click', () => runTest('/proxmox/containers'));
+  </script>
+</body>
+</html>

@@ -454,9 +454,9 @@ body {
   border: 1px solid var(--card-border);
   border-radius: 24px;
   padding: 24px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
   box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.25);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -464,7 +464,7 @@ body {
 
 .dashboard-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 15px 35px 0 rgba(99, 102, 241, 0.1);
+  box-shadow: 0 20px 40px 0 rgba(0, 0, 0, 0.35);
 }
 
 .card-header {
@@ -1384,4 +1384,1057 @@ body {
 .energy-table tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.02);
 }
+
+/* Sonos Media Player Card Styles */
+.card-sonos {
+  background: rgba(139, 92, 246, 0.02);
+  border-color: rgba(139, 92, 246, 0.1);
+  grid-column: span 1;
+}
+.card-sonos:hover {
+  box-shadow: 0 15px 35px 0 rgba(139, 92, 246, 0.12);
+}
+.icon-sonos i {
+  color: #8b5cf6;
+}
+.sonos-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sonos-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+}
+.sonos-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sonos-tab-btn:hover {
+  color: white;
+}
+.sonos-tab-btn.active {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+.sonos-player-layout {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.sonos-art-container {
+  width: 90px;
+  height: 90px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+.sonos-album-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sonos-album-art-placeholder {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sonos-status-pill {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  background: rgba(11, 15, 25, 0.8);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+.sonos-info-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  min-width: 0;
+}
+.sonos-track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sonos-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sonos-artist {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sonos-controls-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.sonos-volume-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+.sonos-volume-slider {
+  flex-grow: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+  accent-color: #8b5cf6;
+  outline: none;
+  transition: opacity 0.2s;
+}
+.sonos-volume-slider:hover {
+  opacity: 0.8;
+}
+.sonos-vol-text {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  width: 32px;
+  text-align: right;
+}
+.pulse-music {
+  animation: pulse-music 2.5s infinite ease-in-out;
+}
+.btn-play-pause.active-playing {
+  background: #8b5cf6 !important;
+  color: white !important;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+@keyframes pulse-music {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Inline Telemetry details for Compact Lights & Devices */
+.device-name-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.device-details-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.device-details-pills .detail-pill {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.device-details-pills .detail-pill i {
+  color: var(--text-secondary);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Static Access rows that shouldn't look clickable */
+.compact-device-row.device-static {
+  cursor: default;
+}
+
+.compact-device-row.device-static:hover {
+  background: rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.02) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Status dots for Access */
+.status-dot.status-running {
+  background-color: var(--color-online) !important;
+  box-shadow: 0 0 6px var(--color-online);
+}
+
+.status-dot.status-stopped {
+  background-color: var(--text-secondary) !important;
+  box-shadow: none;
+}
+
+.status-dot.status-offline {
+  background-color: var(--color-offline) !important;
+  box-shadow: 0 0 6px var(--color-offline);
+}
+
+/* ─── Navidrome Mediathek Browser ──────────────────────────────────────────── */
+
+.sonos-browser-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sonos-browser-toggle-btn {
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  padding: 7px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #c084fc;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  width: 100%;
+  letter-spacing: 0.2px;
+}
+
+.sonos-browser-toggle-btn:hover {
+  background: rgba(139, 92, 246, 0.15);
+  color: #e9d5ff;
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.12);
+}
+
+.sonos-browser-panel-wrap {
+  margin-top: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+.sonos-browser-panel {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tab Bar ── */
+.nd-tab-bar {
+  display: flex;
+  gap: 2px;
+  padding: 6px 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.nd-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 500;
+  font-family: var(--font-main);
+  padding: 6px 4px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.nd-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
+}
+
+.nd-tab-btn.active {
+  color: #c084fc;
+  background: rgba(139, 92, 246, 0.12);
+  border-bottom: 2px solid #8b5cf6;
+  font-weight: 600;
+}
+
+/* ── Search Bar ── */
+.nd-search-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.nd-search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+
+.nd-search-input-wrap input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 0.73rem;
+  font-family: var(--font-main);
+  color: white;
+}
+
+.nd-search-input-wrap input::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.nd-search-input-wrap:focus-within {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+}
+
+.nd-search-btn {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  color: #c084fc;
+  font-size: 0.72rem;
+  font-family: var(--font-main);
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.nd-search-btn:hover {
+  background: rgba(139, 92, 246, 0.25);
+  color: white;
+}
+
+/* ── Browser Header (breadcrumb) ── */
+.nd-browser-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.nd-back-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.nd-back-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: #c084fc;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.nd-browser-title {
+  flex: 1;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Browser Content Area ── */
+.nd-browser-content {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.nd-browser-content::-webkit-scrollbar { width: 3px; }
+.nd-browser-content::-webkit-scrollbar-track { background: transparent; }
+.nd-browser-content::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 2px; }
+.nd-browser-content::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.5); }
+
+/* ── Loading & Empty States ── */
+.nd-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.nd-empty {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  padding: 20px 12px;
+  opacity: 0.6;
+}
+
+/* ── Home Category Grid ── */
+.nd-home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.nd-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  text-align: center;
+}
+
+.nd-cat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nd-cat-icon i { width: 16px; height: 16px; }
+
+.nd-cat-label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  transition: color 0.15s;
+}
+
+.nd-category-card:hover { transform: translateY(-1px); }
+.nd-category-card:hover .nd-cat-label { color: var(--text-primary); }
+
+.nd-cat-new        { background: rgba(139, 92, 246, 0.06); }
+.nd-cat-new .nd-cat-icon      { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.nd-cat-new:hover  { background: rgba(139, 92, 246, 0.12); border-color: rgba(139,92,246,0.2); box-shadow: 0 0 12px rgba(139,92,246,0.1); }
+
+.nd-cat-recent        { background: rgba(6, 182, 212, 0.06); }
+.nd-cat-recent .nd-cat-icon   { background: rgba(6,182,212,0.15); color: #22d3ee; }
+.nd-cat-recent:hover  { background: rgba(6, 182, 212, 0.12); border-color: rgba(6,182,212,0.2); box-shadow: 0 0 12px rgba(6,182,212,0.1); }
+
+.nd-cat-frequent      { background: rgba(245, 158, 11, 0.06); }
+.nd-cat-frequent .nd-cat-icon { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.nd-cat-frequent:hover{ background: rgba(245, 158, 11, 0.12); border-color: rgba(245,158,11,0.2); box-shadow: 0 0 12px rgba(245,158,11,0.1); }
+
+.nd-cat-random        { background: rgba(16, 185, 129, 0.06); }
+.nd-cat-random .nd-cat-icon   { background: rgba(16,185,129,0.15); color: #34d399; }
+.nd-cat-random:hover  { background: rgba(16, 185, 129, 0.12); border-color: rgba(16,185,129,0.2); box-shadow: 0 0 12px rgba(16,185,129,0.1); }
+
+.nd-cat-artists       { background: rgba(244, 63, 94, 0.06); }
+.nd-cat-artists .nd-cat-icon  { background: rgba(244,63,94,0.15); color: #fb7185; }
+.nd-cat-artists:hover { background: rgba(244, 63, 94, 0.12); border-color: rgba(244,63,94,0.2); box-shadow: 0 0 12px rgba(244,63,94,0.1); }
+
+.nd-cat-genres        { background: rgba(99, 102, 241, 0.06); }
+.nd-cat-genres .nd-cat-icon   { background: rgba(99,102,241,0.15); color: #818cf8; }
+.nd-cat-genres:hover  { background: rgba(99, 102, 241, 0.12); border-color: rgba(99,102,241,0.2); box-shadow: 0 0 12px rgba(99,102,241,0.1); }
+
+/* ── Album Grid ── */
+.nd-album-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.nd-album-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.nd-album-card:hover { transform: translateY(-2px); }
+
+.nd-album-cover {
+  position: relative;
+  aspect-ratio: 1;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.nd-album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+.nd-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.03);
+}
+
+.nd-album-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  border-radius: 8px;
+}
+
+.nd-album-card:hover .nd-album-play-overlay { opacity: 1; }
+
+.nd-album-info {
+  padding: 0 2px 4px;
+}
+
+.nd-album-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.nd-album-sub {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+/* ── Track List ── */
+.nd-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nd-track-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 6px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.nd-track-row:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.nd-track-row:hover .nd-track-play-btn { opacity: 1; }
+
+.nd-track-cover {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.nd-track-cover-placeholder {
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.2);
+}
+
+.nd-track-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.nd-track-title {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nd-track-sub {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.nd-track-dur {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.nd-track-play-btn {
+  width: 18px;
+  height: 18px;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a78bfa;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.nd-track-row:hover .nd-track-play-btn { 
+  opacity: 1; 
+  background: rgba(139,92,246,0.3);
+}
+
+/* ── List (artists, playlists, genres) ── */
+.nd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nd-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.nd-list-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.nd-list-cover {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.nd-list-cover-placeholder {
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+}
+
+.nd-list-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.nd-list-title {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nd-list-sub {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.nd-list-play-btn {
+  width: 20px;
+  height: 20px;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a78bfa;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.nd-list-play-btn:hover {
+  background: #8b5cf6;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* ── Search Groups ── */
+.nd-search-group {
+  margin-bottom: 8px;
+}
+
+.nd-search-group-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(139,92,246,0.7);
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+/* --- PREMIUM STYLING REDESIGN OVERRIDES --- */
+
+/* Root Category variables */
+:root {
+  --glow-ha: rgba(244, 63, 94, 0.15);
+  --glow-storen: rgba(245, 158, 11, 0.12);
+  --glow-pve: rgba(59, 130, 246, 0.15);
+  --glow-containers: rgba(168, 85, 247, 0.15);
+  --glow-nas: rgba(16, 185, 129, 0.15);
+  --glow-venta: rgba(6, 182, 212, 0.15);
+  --glow-sonos: rgba(139, 92, 246, 0.2);
+  --glow-energy: rgba(245, 158, 11, 0.15);
+  --glow-network: rgba(99, 102, 241, 0.15);
+}
+
+/* Category-specific card glow overrides */
+.card-ha:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-ha), inset 0 0 15px rgba(244, 63, 94, 0.03);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+.card-storen:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-storen), inset 0 0 15px rgba(245, 158, 11, 0.03);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.card-pve:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-pve), inset 0 0 15px rgba(59, 130, 246, 0.03);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+.card-containers:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-containers), inset 0 0 15px rgba(168, 85, 247, 0.03);
+  border-color: rgba(168, 85, 247, 0.25);
+}
+.card-nas:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-nas), inset 0 0 15px rgba(16, 185, 129, 0.03);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.card-venta:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-venta), inset 0 0 15px rgba(6, 182, 212, 0.03);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+.card-sonos:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-sonos), inset 0 0 20px rgba(139, 92, 246, 0.05);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+.card-energy:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-energy), inset 0 0 15px rgba(245, 158, 11, 0.03);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.card-network:hover {
+  box-shadow: 0 15px 35px 0 var(--glow-network), inset 0 0 15px rgba(99, 102, 241, 0.03);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* Float Animation for background blobs */
+@keyframes float-blob-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6vw, 4vh) scale(1.1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes float-blob-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-6vw, -6vh) scale(1.15); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes float-blob-3 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4vw, -4vh) scale(1.08); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.blob-1 { animation: float-blob-1 25s infinite ease-in-out !important; }
+.blob-2 { animation: float-blob-2 30s infinite ease-in-out !important; }
+.blob-3 { animation: float-blob-3 28s infinite ease-in-out !important; }
+
+/* Custom range sliders styling (Sleek and Modern) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+/* Webkit browser slider track & thumb */
+input[type="range"]::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.08);
+  height: 5px;
+  border-radius: 3px;
+  border: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ffffff;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  margin-top: -3.5px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.25);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+}
+
+/* Override sonos volume slider theme */
+.sonos-volume-slider::-webkit-slider-runnable-track {
+  background: rgba(139, 92, 246, 0.15) !important;
+}
+
+.sonos-volume-slider::-webkit-slider-thumb {
+  background: #a78bfa !important;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6) !important;
+}
+
+.sonos-volume-slider:hover::-webkit-slider-thumb {
+  background: #c084fc !important;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.9) !important;
+}
+
+/* Sonos player layout and details */
+.sonos-art-container {
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(139, 92, 246, 0.1);
+}
+
+.sonos-tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sonos-tab-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sonos-tab-btn:hover {
+  background: rgba(139, 92, 246, 0.05);
+  border-color: rgba(139, 92, 246, 0.15);
+}
+
+.sonos-tab-btn.active {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
+}
+
+/* Circular Sleek Player Buttons */
+.btn-icon-sm, .btn-icon-md {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  padding: 0;
+  outline: none;
+}
+
+.btn-icon-sm {
+  width: 30px;
+  height: 30px;
+}
+
+.btn-icon-sm i {
+  width: 13px;
+  height: 13px;
+}
+
+.btn-icon-md {
+  width: 42px;
+  height: 42px;
+}
+
+.btn-icon-md i {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon-sm:hover, .btn-icon-md:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.06);
+}
+
+.btn-icon-sm:active, .btn-icon-md:active {
+  transform: scale(0.96);
+}
+
+/* Sonos play/pause active glowing button */
+.btn-play-pause.active-playing {
+  background: linear-gradient(135deg, #8b5cf6, #c084fc) !important;
+  color: white !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5) !important;
+}
+
+.btn-play-pause.active-playing:hover {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.7) !important;
+  transform: scale(1.06);
+}
+
+/* Shutter track positions override */
+.shutter-track {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.01);
+}
+
+/* Deep Glass slot for search inputs */
+.sonos-browser-search-row input {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  font-size: 0.75rem !important;
+  color: white !important;
+  transition: all 0.2s ease !important;
+}
+
+.sonos-browser-search-row input:focus {
+  outline: none !important;
+  border-color: rgba(139, 92, 246, 0.4) !important;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.15) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Sonos browser panel list styling */
+.sonos-browser-panel {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sonos-browser-item {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.sonos-browser-item:hover {
+  background: rgba(139, 92, 246, 0.06);
+  border-color: rgba(139, 92, 246, 0.15);
+  transform: translateX(2px);
+}
+
+.sonos-browser-item.is-folder {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.sonos-browser-item.is-folder:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+/* Settings modal inputs look futuristic */
+.form-group input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.form-group input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Page global custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 
