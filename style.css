@@ -1180,3 +1180,208 @@ body {
   margin-top: 4px;
   justify-content: flex-end;
 }
+
+/* Venta Humidifier Card Styles */
+.card-venta {
+  background: rgba(6, 182, 212, 0.03);
+  border-color: rgba(6, 182, 212, 0.1);
+}
+.card-venta:hover {
+  box-shadow: 0 15px 35px 0 rgba(6, 182, 212, 0.15);
+}
+.icon-venta i {
+  color: #06b6d4;
+}
+.venta-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.venta-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.venta-metric-box {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.venta-metric-box .venta-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.venta-metric-box .venta-stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.venta-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 4px;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+.venta-maintenance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  border-radius: 14px;
+}
+.venta-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(6, 182, 212, 0.04);
+  border: 1px solid rgba(6, 182, 212, 0.1);
+  border-radius: 12px;
+}
+.venta-water-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  border-radius: 14px;
+}
+.venta-water-drops {
+  display: flex;
+  gap: 6px;
+}
+.venta-water-drop {
+  width: 10px;
+  height: 10px;
+  border-radius: 50% 50% 50% 50% / 12% 50% 50% 88%;
+  transform: rotate(-45deg);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.venta-water-drop.active {
+  background: #06b6d4;
+  box-shadow: 0 0 6px #06b6d4;
+}
+.venta-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.venta-stat-label {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.venta-stat-label i {
+  width: 14px;
+  height: 14px;
+}
+.venta-stat-value {
+  font-weight: 500;
+}
+
+
+/* Energy & Cost Card Styles */
+.card-energy {
+  background: rgba(245, 158, 11, 0.03);
+  border-color: rgba(245, 158, 11, 0.12);
+}
+.card-energy:hover {
+  box-shadow: 0 15px 35px 0 rgba(245, 158, 11, 0.15);
+}
+.icon-energy i {
+  color: #f59e0b;
+}
+.energy-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.energy-summary-item {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  padding: 12px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.energy-summary-item.span-2-cols {
+  grid-column: span 2;
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.15);
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+}
+.energy-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.energy-label i {
+  width: 12px;
+  height: 12px;
+}
+.energy-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.energy-summary-item.span-2-cols .energy-value {
+  font-size: 1.4rem;
+  color: #f59e0b;
+  text-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.energy-table-wrapper {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.energy-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8rem;
+}
+.energy-table th {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+.energy-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+.energy-table tr:last-child td {
+  border-bottom: none;
+}
+.energy-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+

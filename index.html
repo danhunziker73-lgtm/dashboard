@@ -305,6 +305,70 @@
         </div>
       </section>
 
+      <!-- VENTA LUFTWÄSCHER CARD -->
+      <section class="dashboard-card card-venta" id="card-venta">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-venta"><i data-lucide="wind"></i></div>
+            <h2>Venta Luftwäscher</h2>
+          </div>
+          <span class="badge" id="venta-status-badge">AUS</span>
+        </div>
+        <div class="card-body" id="venta-card-body">
+          <div class="loading-spinner-container">
+            <div class="spinner"></div>
+            <span>Suche Venta-Geräte...</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENERGIE & VERBRAUCH CARD -->
+      <section class="dashboard-card card-energy" id="card-energy">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-energy"><i data-lucide="zap"></i></div>
+            <h2>Energie & Verbrauch</h2>
+          </div>
+          <span class="badge" id="energy-total-badge">-- W</span>
+        </div>
+        <div class="card-body">
+          <div class="energy-summary-grid">
+            <div class="energy-summary-item">
+              <span class="energy-label"><i data-lucide="activity"></i> Gesamtleistung</span>
+              <span class="energy-value font-mono" id="energy-sum-power">0 W</span>
+            </div>
+            <div class="energy-summary-item">
+              <span class="energy-label"><i data-lucide="gauge"></i> Gesamtenergie</span>
+              <span class="energy-value font-mono" id="energy-sum-consumption">0.0 kWh</span>
+            </div>
+            <div class="energy-summary-item span-2-cols">
+              <span class="energy-label"><i data-lucide="coins"></i> Gesamtkosten</span>
+              <span class="energy-value font-mono highlight-cost" id="energy-sum-cost">0.00 CHF</span>
+            </div>
+          </div>
+          <div class="energy-table-wrapper">
+            <table class="energy-table">
+              <thead>
+                <tr>
+                  <th>Gerät</th>
+                  <th>Leistung</th>
+                  <th>Energie</th>
+                  <th>Kosten</th>
+                </tr>
+              </thead>
+              <tbody id="energy-devices-list">
+                <tr>
+                  <td colspan="4" style="text-align: center; padding: 20px 0; color: var(--text-secondary);">
+                    Keine aktiven Verbraucher gefunden
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
       <!-- LXC CONTAINERS CARD (Table) -->
       <section class="dashboard-card card-containers" id="card-lxc">
         <div class="card-header">
@@ -368,6 +432,13 @@
           </div>
           <small>Der Autorisierungsschlüssel für den Worker (Bearer Token).</small>
         </div>
+
+        <div class="form-group">
+          <label for="input-energy-rate">Strompreis (Rappen pro kWh)</label>
+          <input type="number" id="input-energy-rate" step="0.1" min="0" placeholder="z.B. 25.0" required>
+          <small>Der Tarif in Rappen pro Kilowattstunde (Rp./kWh) zur Berechnung der Stromkosten.</small>
+        </div>
+
 
         <div class="modal-actions">
           <button type="button" id="btn-test-connection" class="btn btn-secondary">
